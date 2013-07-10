@@ -1,0 +1,63 @@
+#!/usr/bin/python26
+
+# pluo, Apr 1, 2013
+# PATH=$PATH:/home/dataproc/bi/lib/python # add python lib to path
+
+import legoo
+import sys
+from optparse import OptionParser
+
+def main():
+
+  usage = """%prog [options] 
+# sample: export query result to tsv
+[mysql_to_csv --mysql_host='bidbs' --mysql_db='salesforce' --mysql_table='opportunity' --mysql_quick='Y'  --mysql_query='select * from  opportunity limit 10000' --csv_dir='/data/tmp']
+
+# sample: export table to tsv
+[mysql_to_csv --mysql_host='bidbs' --mysql_db='bi' --mysql_table='dim_time'  --csv_dir='/data/tmp']
+"""
+
+  # create new parser object
+  parser = OptionParser(usage=usage)
+        
+  parser.add_option("--mysql_ini", dest="mysql_ini",		
+                    help="mysql initial file for user, password and default db, default: [mysql.ini]", 
+                    default='mysql.ini')
+  parser.add_option("--mysql_host", dest="mysql_host",
+                    help="mysql host for source data, default: [bidbs]", default='bidbs')
+  parser.add_option("--mysql_db", dest="mysql_db",
+                    help="mysql database for source data, default: [bi]", default='bi')
+  parser.add_option("--mysql_user", dest="mysql_user",
+                    help="OPTIONAL: mysql user, if not specified, get user from mysql_ini")
+  parser.add_option("--mysql_password", dest="mysql_password",
+                    help="OPTIONAL: mysql password, if not specified, get password from mysql_ini")
+  parser.add_option("--mysql_quick", dest="mysql_quick",
+                    help="mysql quick for large volume data")
+  parser.add_option("--mysql_table", dest="mysql_table",
+                    help="mysql table to be exported")
+  parser.add_option("--mysql_query", dest="mysql_query",
+                    help="query results to be exported")
+  parser.add_option("--csv_dir", dest="csv_dir",
+                    help="dir for csv file to be exported, default: [/data/tmp]", default='/data/tmp')
+  parser.add_option("--csv_file", dest="csv_file",
+                    help="the csv file to be exported, default: [table_name.csv]")
+  parser.add_option('--debug', dest="debug", help="set the debug flag [Y|N], default: [N]", default='N')
+  (options, args) = parser.parse_args()
+
+  legoo.mysql_to_csv(mysql_ini       = options.mysql_ini, \
+                   mysql_host      = options.mysql_host, \
+                   mysql_db        = options.mysql_db, \
+                   mysql_user      = options.mysql_user, \
+                   mysql_password  = options.mysql_password, \
+                   mysql_table     = options.mysql_table, \
+                   mysql_quick     = options.mysql_quick, \
+                   mysql_query     = options.mysql_query, \
+                   csv_dir        = options.csv_dir,  \
+                   csv_file        = options.csv_file \
+                   )
+  # pass
+
+if __name__ == '__main__':
+  main()
+
+

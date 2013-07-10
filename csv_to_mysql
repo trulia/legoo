@@ -1,0 +1,72 @@
+#!/usr/bin/python26
+
+# pluo, Apr 1, 2013
+
+import legoo
+import sys
+from optparse import OptionParser
+
+def main():
+  usage = """%prog [options] sample.csv
+# sample: create table tmp_opp fbased on csv header then load data into table
+[csv_to_mysql --mysql_create_table='y' --mysql_table='tmp_opp' /tmp/opportunity2.csv]
+
+# sample: load data into table tmp_opp
+[csv_to_mysql --mysql_table='tmp_opp' /tmp/opportunity2.csv]
+
+# sample: truncate table tmp_opp first then load data into table
+[csv_to_mysql --mysql_table='tmp_opp' --mysql_truncate_table='Y' /tmp/opportunity2.csv]
+
+# sample: load data into table tmp_opp for csv without header
+[csv_to_mysql --mysql_table='tmp_opp' --mysql_truncate_table='Y' --csv_header='N' /tmp/opportunity3.csv]
+"""
+  # create new parser object
+  parser = OptionParser(usage=usage)
+
+  # register mysql options
+  parser.add_option("--mysql_ini", dest="mysql_ini",
+                    help="mysql initial file for user, password and default db, default: [mysql.ini]",
+                    default='mysql.ini')
+  parser.add_option("--mysql_host", dest="mysql_host",
+                    help="target mysql host. default: [bidbs]", default='bidbs')
+  parser.add_option("--mysql_db", dest="mysql_db",
+                    help="target mysql database. default: [bi_staging]", default='bi_staging')
+  parser.add_option("--mysql_table", dest="mysql_table",
+                    help="target mysql table name")
+  parser.add_option("--mysql_create_table", dest="mysql_create_table",
+                    help="mysql drop table flag [Y|N]. default: [N]", default='N')
+  parser.add_option("--mysql_truncate_table", dest="mysql_truncate_table",
+                    help="mysql truncate table flag [Y|N]. default: [N]", default='N')
+  # register csv options
+  parser.add_option("--csv_delimiter", dest="csv_delimiter",
+                    help="delimiter for csv file. default: [tab]", default='tab')
+  parser.add_option("--csv_header", dest="csv_header",
+                    help="header flag for csv file. default: [Y]", default='Y')
+  parser.add_option("--csv_optionally_enclosed_by", dest="csv_optionally_enclosed_by",
+                    help="csv_optionally enclosed_by for csv file")
+  parser.add_option("--max_rows", dest="max_rows",
+                    help="number of rows in csv file scanned to find column length")
+
+  parser.add_option("--debug", dest="debug", help="debug flag [Y|N]. default: [N]", default='N')
+
+  # parse option and args
+  (options, args) = parser.parse_args()
+
+  for csv_file in args:
+    legoo.csv_to_mysql(mysql_host                 = options.mysql_host, \
+                     mysql_db                   = options.mysql_db, \
+                     mysql_table                = options.mysql_table, \
+                     mysql_create_table         = options.mysql_create_table, \
+                     mysql_truncate_table       = options.mysql_truncate_table, \
+                     csv_file                   = csv_file, \
+                     csv_delimiter              = options.csv_delimiter, \
+                     csv_header                 = options.csv_header, \
+                     csv_optionally_enclosed_by = options.csv_optionally_enclosed_by, \
+                     max_rows                   = options.max_rows, \
+                     debug                      = options.debug
+                     )
+
+if __name__ == '__main__':
+  main()
+
+

@@ -1,0 +1,84 @@
+#!/usr/bin/python26
+
+# pluo, Apr 1, 2013
+# PATH=$PATH:/home/dataproc/bi/lib/python # add python lib to path
+# mysql_to_hive --mysql_host='bidbs' --mysql_db='bi_staging' --mysql_table='userstatsreport' --hive_create_table='Y'
+# mysql_to_hive --mysql_db='bi' --mysql_table='lkp_state' --hive_create_table='Y' 
+# sqoop-import  --connect jdbc:mysql://bidbs/bi_staging -username root -password 6c02avsg  --table userstatsreport  --hive-table userstatsreport --create-hive-table --hive-import --hive-home /usr/lib/hive   
+# sqoop-import  --connect jdbc:mysql://maildb-slave/Email -username root -password 6c02avsg  --table FE_EmailRecord  --hive-table FE_EmailRecord  --where "time_stamp < '2013-02-02'"  --create-hive-table --hive-import --hive-home /usr/lib/hive   
+# time mysql_to_hive --mysql_host='maildb-slave' --mysql_db='Email' --mysql_table='FE_EmailRecord' --mysql_query="select * from Email.FE_EmailRecord where time_stamp < '2013-02-02'" --hive_create_table='Y'  --remove_carriage_return='Y'
+# mysql_to_hive --mysql_host='bidbs' --mysql_db='bi' --mysql_table='dim_time' --hive_create_table='Y'
+
+# add relative path 
+import os, sys, inspect
+# realpath() with make your script run, even if you symlink it :)
+cmd_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile( inspect.currentframe() ))[0]))
+if cmd_folder not in sys.path:
+    sys.path.insert(0, cmd_folder)
+
+import legoo
+import sys
+from optparse import OptionParser
+
+def main():
+  parser = OptionParser()
+  parser.add_option("--mysql_ini", dest="mysql_ini",
+                    help="mysql initial file for user, password and default db, default: [mysql.ini]", default='mysql.ini')
+  parser.add_option("--mysql_host", dest="mysql_host",
+                    help="mysql host for source data, default: [bidbs]", default='bidbs')
+  parser.add_option("--mysql_db", dest="mysql_db",
+                    help="mysql database for source data, default: [bi]", default='bi')
+  parser.add_option("--mysql_user", dest="mysql_user",
+                    help="OPTIONAL: mysql user, if not specified, get user from mysql_ini")
+  parser.add_option("--mysql_password", dest="mysql_password",
+                    help="OPTIONAL: mysql password, if not specified, get password from mysql_ini")
+  parser.add_option("--mysql_quick", dest="mysql_quick",
+                    help="OPTIONAL: --quick option for mysql client, default:[N]", default='N')
+  parser.add_option("--mysql_table", dest="mysql_table",
+                    help="mysql table to be exported")
+  parser.add_option("--mysql_query", dest="mysql_query",
+                    help="query results to be exported")
+  parser.add_option("--hive_node", dest="hive_node",
+                    help="OPTIONAL: target hive node. default: [namenode1]", default='namenode1')
+  parser.add_option("--hive_port", dest="hive_port",
+                    help="OPTIONAL: target hive port. default: 10000", default='10000')
+  parser.add_option("--hive_db", dest="hive_db",
+                    help="OPTIONAL: target hive db. default: [staging]", default='staging')
+  parser.add_option("--hive_ddl", dest="hive_ddl",
+                    help="OPTIONAL: hive DDL for target hive table. default created from source mysql table")
+  parser.add_option("--hive_create_table", dest="hive_create_table",
+                    help="OPTIONAL: CREATE_TABLE flag for hive table DDL. default: [N]", default='N')
+  parser.add_option("--hive_overwrite", dest="hive_overwrite",
+                    help="OPTIONAL: OVERWRITE flag for hive table loading. default: [Y]", default='Y')
+  parser.add_option("--hive_table", dest="hive_table",
+                    help="OPTIONAL: hive table name. default: created from csv file name")
+  parser.add_option("--hive_partition", dest="hive_partition",
+                    help="partition name i.e. date_int=20130428")
+  parser.add_option("--remove_carriage_return", dest="remove_carriage_return",
+                    help="OPTIONAL: remove carriage return from mysql source table. default: [N]", default='N')
+  parser.add_option('--debug', dest="debug", help="set the debug flag [Y|N], default: [N]", default='N')
+  (options, args) = parser.parse_args()
+
+  legoo.mysql_to_hive(mysql_ini              = options.mysql_ini, \
+                    mysql_host             = options.mysql_host, \
+                    mysql_db               = options.mysql_db, \
+                    mysql_user             = options.mysql_user, \
+                    mysql_password         = options.mysql_password, \
+                    mysql_quick            = options.mysql_quick, \
+                    mysql_table            = options.mysql_table, \
+                    mysql_query            = options.mysql_query, \
+                    hive_node              = options.hive_node, \
+                    hive_port              = options.hive_port, \
+                    hive_db                = options.hive_db, \
+                    hive_create_table      = options.hive_create_table, \
+                    hive_table             = options.hive_table, \
+                    hive_partition         = options.hive_partition, \
+                    hive_ddl               = options.hive_ddl, \
+                    hive_overwrite         = options.hive_overwrite, \
+                    remove_carriage_return = options.remove_carriage_return
+                    )
+  # pass
+
+if __name__ == '__main__':
+  main()
+

@@ -1,0 +1,36 @@
+#!/usr/bin/python26
+
+# pluo, Apr 1, 2013
+# PATH=$PATH:/home/dataproc/bi/lib/python # add python lib to path
+# csv_dump -d ','  -n 6 -l 2 /tmp/msa.csv2
+# csv_dump  -n 3000142 /tmp/userstatsreport.csv
+
+import legoo
+import sys
+from optparse import OptionParser
+
+def main():
+  # create new parser object
+  parser = OptionParser()
+
+  # register hive options
+  parser.add_option("-d", "--csv_delimiter", dest="csv_delimiter", help="csv file delimiter, default: [tab]", default='tab')
+  parser.add_option("-l", "--lines", dest="lines", help="number of lines to dump out, default: [2]", default=2)
+  parser.add_option("-n", "--line_number", dest="line_number", help="starting line number to dump out, default: [2]", default=2)
+  (options, args) = parser.parse_args()
+  # print options
+
+
+
+  for csv_file in args:
+      legoo.csv_dump( csv_file      = csv_file, \
+                    csv_delimiter = options.csv_delimiter, \
+                    lines         = options.lines, \
+                    line_number   = options.line_number
+                    )
+  # pass
+
+if __name__ == '__main__':
+  main()
+
+

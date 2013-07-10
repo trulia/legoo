@@ -1,0 +1,67 @@
+#!/usr/bin/python26
+
+# pluo, Apr 1, 2013
+# PATH=$PATH:/home/dataproc/bi/lib/python # add python lib to path
+# hive_to_mysql --hive_table='dim_listing_vw' --hive_db='bi' --hive_query='select count(*) from dim_listing_vw where agent_email is not null or agent_phone is not null;'
+# hive_to_mysql --hive_table='lkp_state' --mysql_create_table='Y' 
+
+import legoo
+import sys
+from optparse import OptionParser
+
+def main():
+  """ test
+  """
+  # create new parser object
+  parser = OptionParser()
+
+  # register hive options
+  parser.add_option("--hive_node", dest="hive_node",
+                    help="source hive node. default: [namenode1]", default='namenode1')
+  parser.add_option("--hive_db", dest="hive_db",
+                    help="source hive database. default: [staging]", default='staging')
+  parser.add_option("--hive_table", dest="hive_table",
+                    help="source hive table name")
+  parser.add_option("--hive_query", dest="hive_query",
+                    help="Free form query results to be exported")
+  parser.add_option('--debug', dest="debug",
+                    help="set the debug flag [Y|N], default: [N]")
+  # register mysql options
+  parser.add_option("--mysql_ini", dest="mysql_ini", \
+                    help="mysql initial file for user, password and default db, default: [mysql.ini]", \
+                    default='mysql.ini')
+  parser.add_option("--mysql_host", dest="mysql_host",
+                    help="target mysql host, default: [bidbs]", default='bidbs')
+  parser.add_option("--mysql_db", dest="mysql_db",
+                    help="target mysql database, default: [bi_staging]", default='bi_staging')
+  parser.add_option("--mysql_table", dest="mysql_table",
+                    help="target mysql table name")
+  parser.add_option("--mysql_create_table", dest="mysql_create_table",
+                    help="mysql drop table flag [Y|N], default: [N]", default='N')
+  parser.add_option("--mysql_truncate_table", dest="mysql_truncate_table",
+                    help="mysql truncate table flag [Y|N], default: [N]", default='N')
+  parser.add_option("--csv_optionally_enclosed_by", dest="csv_optionally_enclosed_by",
+                    help="optionally enclosed_by for csv file")
+  parser.add_option("--max_rows", dest="max_rows",
+                    help="number of rows scanned to create mysql ddl")
+
+  (options, args) = parser.parse_args()
+
+  legoo.hive_to_mysql(hive_node                  = options.hive_node, \
+                    hive_db                    = options.hive_db, \
+                    hive_table                 = options.hive_table, \
+                    hive_query                 = options.hive_query, \
+                    mysql_ini                  = options.mysql_ini, \
+                    mysql_host                 = options.mysql_host, \
+                    mysql_db                   = options.mysql_db, \
+                    mysql_table                = options.mysql_table, \
+                    mysql_truncate_table       = options.mysql_truncate_table, \
+                    mysql_create_table         = options.mysql_create_table, \
+                    csv_optionally_enclosed_by = options.csv_optionally_enclosed_by, \
+                    max_rows                   = options.max_rows
+                    )
+  # pass
+
+if __name__ == '__main__':
+  main()
+

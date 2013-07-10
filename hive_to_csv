@@ -1,0 +1,52 @@
+#!/usr/bin/python26
+
+# pluo, Apr 1, 2013
+# PATH=$PATH:/home/dataproc/bi/lib/python # add python lib to path
+# hive_to_mysql --hive_table='dim_listing_vw' --hive_db='bi' --hive_query='select count(*) from dim_listing_vw where agent_email is not null or agent_phone is not null;'
+# hive_to_mysql --hive_table='lkp_state' --mysql_create_table='Y' 
+
+import legoo
+import sys
+from optparse import OptionParser
+
+def main():
+  usage = """%prog [options] 
+# sample: export query result to /data/tmp/dim_time.csv
+[hive_to_csv --hive_node='namenode1' --hive_db='bi' --hive_table='dim_time' --hive_query='select * from dim_time limit 1000' --csv_dir='/data/tmp/']
+
+# sample: export query result to tsv /data/tmp/dim_time.csv
+[hive_to_csv --hive_node='namenode1' --hive_db='bi' --hive_table='dim_time' --csv_dir='/tmp/' --csv_file='dim_time2.csv']
+"""
+
+  # create new parser object
+  parser = OptionParser(usage=usage)
+
+  # register hive options
+  parser.add_option("--hive_node", dest="hive_node",
+                    help="source hive node. default: [namenode1]", default='namenode1')
+  parser.add_option("--hive_db", dest="hive_db",
+                    help="source hive database. default: [staging]", default='staging')
+  parser.add_option("--hive_table", dest="hive_table",
+                    help="source hive table name")
+  parser.add_option("--hive_query", dest="hive_query",
+                    help="Free form query results to be exported")
+  parser.add_option("--csv_dir", dest="csv_dir",
+                    help="dir for tsv", default='/data/tmp/')
+  parser.add_option("--csv_file", dest="csv_file",
+                    help="export hive [table | query results] to tsv")
+  parser.add_option('--debug', dest="debug",
+                    help="set the debug flag [Y|N], default: [N]")
+
+  (options, args) = parser.parse_args()
+
+  legoo.hive_to_csv(hive_node   = options.hive_node, \
+                  hive_db     = options.hive_db, \
+                  hive_table  = options.hive_table, \
+                  hive_query  = options.hive_query, \
+                  csv_dir     = options.csv_dir, \
+                  csv_file    = options.csv_file
+                  )
+
+if __name__ == '__main__':
+  main()
+
