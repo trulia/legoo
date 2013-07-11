@@ -28,9 +28,9 @@ Out of frustration, I built `legoo` during the [trulia](http://www.trulia.com) i
 
 ## Prerequisites
 
-Before you can use `legoo`, `Python` module `MySQLdb` and `Hive` must be installed. Dir /data/tmp must created to store tempoarary files.  For `Hive` partitioned table, watch out hdfs permission. update `shebang` and `hive_path` reference based on your system configuration. in   `legoo` has been tested under `Python 2.6`, `MySQL 5.1`, and `Hive 0.7`. 
+Before you can use `legoo`, `Python` module `MySQLdb` and `Hive` must be installed. Update `shebang` and `hive_path` reference to reflect your system configuration. Dir /data/tmp must be created to store tempoarary files.
 
-This document assumes you are using a Linux or Linux-like environment. 
+`legoo` has been tested under `Python 2.6`, `MySQL 5.1`, and `Hive 0.7`. This document assumes you are using a Linux or Linux-like environment. 
 
 ## Legoo modules usage
 To use `legoo` modules, You specify the module you want to use and the options that control the module. All modules ships with a help module. To display help with all avaialble options and sample usages, enter: `module_name -h` or `module_name --help` I will go over each of those modules briefly in turn. 
