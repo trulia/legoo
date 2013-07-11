@@ -13,8 +13,8 @@ To transfer data between `Hadoop`/`Hive` and `MySQL`, `Sqoop` from [Cloudera] (h
 
 Out of frustration, I built `legoo` during the [trulia](http://www.trulia.com) innovation week! 
 
-* [Prerequisites](#Prerequisites)
-* Legoo modules usage
+* [Prerequisites](#prerequisites)
+* [Legoo modules usage](#legoo-modules-usage)
     - [csv_dump](#csv_dump)
     - [csv_to_mysql](#csv_to_mysql)
     - [csv_to_hive](#csv_to_hive)
@@ -22,14 +22,18 @@ Out of frustration, I built `legoo` during the [trulia](http://www.trulia.com) i
     - [hive_to_mysql](#hive_to_mysql)
     - [mysql_to_csv](#mysql_to_csv)
     - [hive_to_csv](#hive_to_csv)
-* [License](#License)
-To use modules above, You specify the module you want to use and the options that control the module. All modules ships with a help module. To display help with all avaialble options and sample usages, enter: `module_name -h` or `module_name --help` I will go over each of those modules briefly in turn. 
+* [License](#license)
+
+
 
 ## Prerequisites
 
-Before you can use `legoo`, `Python` module `MySQLdb` and `Hive` must be installed. Dir /data/tmp must created to store tempoarary files.  For `Hive` partitioned table, watch out hdfs permission. `legoo` has been tested under `Python 2.6`, `MySQL 5.1`, and `Hive 0.7`. 
+Before you can use `legoo`, `Python` module `MySQLdb` and `Hive` must be installed. Dir /data/tmp must created to store tempoarary files.  For `Hive` partitioned table, watch out hdfs permission. update `shebang` and `hive_path` reference based on your system configuration. in   `legoo` has been tested under `Python 2.6`, `MySQL 5.1`, and `Hive 0.7`. 
 
 This document assumes you are using a Linux or Linux-like environment. 
+
+## Legoo modules usage
+To use `legoo` modules, You specify the module you want to use and the options that control the module. All modules ships with a help module. To display help with all avaialble options and sample usages, enter: `module_name -h` or `module_name --help` I will go over each of those modules briefly in turn. 
 
 ### csv_dump 
 `csv_dump` is a `CSV` viewer with options for `--delimiter` and `--line_number`. It maps each field value to field name defined in header, print them out vertically with line number and column number. `csv_dump` allows user to dig into the middle of file with `--line_number` option. It is extremely handy to investigate data issues in a large `CSV` file having tons of fields. 
