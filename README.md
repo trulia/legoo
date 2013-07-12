@@ -204,8 +204,93 @@ To use `legoo` modules, You specify the module you want to use and the options t
 ## `mysql_to_hive` 
 `mysql_to_hive` transfer data from `MySQL` `table` or `query result` to `Hive` table with options: `--mysql_quick`, `--mysql_table`, `--mysql_query`, `--hive_db`, `--hive_create_table`, `--hive_overwrite`, `--hive_table`, `--hive_partition`, `--remove_carriage_return` etc. When `--hive_create_table` set to 'Y', `Hive` table created based on `MySQL DDL`. For large data transfer with more than 1 million rows, set option `--mysql_quick` to use less resource on `MySQL` server. option `--hive_partition` allows user to transfer data directly to `Hive` partition. `--remove_carriage_return` removes carriage return from the `MySQL` source. For column name key word clashes, column name postfix with _new automatically. Non zero RC returned and exception raised if validation failed such as row count not match from MySQL to Hive. 
 
-## hive_to_mysql 
-hive_to_mysql move data from Hive table or query result to MySQL table. When --mysql_create_table set to 'Y', MySQL table created based on Hive table DDL. option --mysql_truncate_table allows use to truncate MySQL table first before loading. Non zero RC returned and exception raised if validation failed such as row count not match from `MySQL` to `Hive`. 
+##### example: transfer query results from `MySQL` to `Hive` table `email_archive.fe_emailrecord_archive` `partition (date_key=20130710)` on `Hive` cluster. remove carriage return from the source data before transfer. 
+    
+    $ mysql_to_hive --mysql_host='maildb-slave' --mysql_db='Email' --mysql_table='FE_EmailRecord' --mysql_query="select f.* from Email.FE_EmailRecord f where time_stamp > '2013-05-01' and time_stamp < '2013-05-02'" --hive_table='fe_emailrecord_archive' --hive_db='email_archive'  --remove_carriage_return='Y' --hive_partition="date_key=20130710"
+    
+    [INFO] running hive query on [namenode1]:[email_archive] ==>> [desc fe_emailrecord_archive]
+    [INFO] running hive query on [namenode1]:[email_archive] ==>> [DROP TABLE IF EXISTS tmp_FE_EmailRecord]
+    [INFO] running hive query on [namenode1]:[email_archive] ==>> [CREATE TABLE tmp_FE_EmailRecord (
+    id                string, 
+    email_type_id     string, 
+    user_id_from      string, 
+    user_id_to        string, 
+    email_from        string, 
+    email_to          string, 
+    user_message      string, 
+    user_copied       string, 
+    create_date       string, 
+    frequency         string, 
+    account_source    string, 
+    emailSource       string, 
+    guid              string, 
+    payload_id        string, 
+    time_stamp        string
+    )
+    ROW FORMAT DELIMITED FIELDS TERMINATED BY '\011'
+    STORED AS TEXTFILE]
+    [INFO] remove special chracter \ with # ==>> [tr -d '\r'  < /data/tmp/FE_EmailRecord.csv > /data/tmp/FE_EmailRecord.csv2]
+    [INFO] running hdfs clean up ==>> [ssh namenode1 '. .bash_profile; hadoop fs -rm /tmp/tmp_FE_EmailRecord 2>/dev/null']
+    [INFO] running csv upload to hdfs ==>> [tail -n +2 /data/tmp/FE_EmailRecord.csv2 | ssh namenode1 'hadoop fs -put - /tmp/tmp_FE_EmailRecord']
+    [INFO] running hive query on [namenode1]:[email_archive] ==>> [load data inpath '/tmp/tmp_FE_EmailRecord' overwrite into table tmp_FE_EmailRecord]
+    [INFO] running hive query on [namenode1]:[email_archive] ==>> [SELECT count(*) from tmp_FE_EmailRecord]
+    [INFO] [tmp_FE_EmailRecord] row count ==>> [3735742] rows
+    [INFO] [/data/tmp/FE_EmailRecord.csv2] line count ==>> [3735742] lines
+    [INFO] file [/data/tmp/FE_EmailRecord.csv2] successfully loaded to hive table [namenode1]:[email_archive].[tmp_FE_EmailRecord]. 
+    [INFO] running hive query on [namenode1]:[email_archive] ==>> [ALTER TABLE fe_emailrecord_archive DROP IF EXISTS PARTITION (date_key=20130710)]
+    [INFO] running hive query on [namenode1]:[email_archive] ==>> [ALTER TABLE fe_emailrecord_archive ADD PARTITION (date_key=20130710)]
+    [INFO] running hive query on [namenode1]:[email_archive] ==>> [INSERT OVERWRITE TABLE fe_emailrecord_archive partition (date_key=20130710) select * from tmp_FE_EmailRecord]
+    [INFO] running hive query on [namenode1]:[email_archive] ==>> [DROP TABLE IF EXISTS tmp_FE_EmailRecord]
+    [INFO] hive table [namenode1]:[email_archive].[fe_emailrecord_archive] PARTITION (date_key=20130710) successfully built
+    [INFO] file [/data/tmp/FE_EmailRecord.csv] removed
+    [INFO] file [/data/tmp/FE_EmailRecord.csv2] removed
+
+
+
+## `hive_to_mysql` 
+`hive_to_mysql` transfer data from `Hive` table or query result to `MySQL` table. When `--mysql_create_table` set to 'Y', `MySQL` table created based on `Hive` table DDL. option `--mysql_truncate_table` allows user to truncate `MySQL` table first before loading. Non zero RC returned and exception raised if validation failed such as row count not match from `MySQL` to `Hive`. 
+
+##### display help
+    $ hive_to_mysql -h
+    Usage: hive_to_mysql [options]
+    
+    Options:
+      -h, --help                            show this help message and exit
+      --hive_node=HIVE_NODE                 source hive node. default: [namenode1]
+      --hive_db=HIVE_DB                     source hive database. default: [staging]
+      --hive_table=HIVE_TABLE               source hive table name
+      --hive_query=HIVE_QUERY               Free form query results to be exported
+      --debug=DEBUG                         set the debug flag [Y|N], default: [N]
+      --mysql_ini=MYSQL_INI                 mysql initial file for user, password and default db, default: [mysql.ini]
+      --mysql_host=MYSQL_HOST               target mysql host, default: [bidbs]
+      --mysql_db=MYSQL_DB                   target mysql database, default: [bi_staging]
+      --mysql_table=MYSQL_TABLE             target mysql table name
+      --mysql_create_table                  mysql drop table flag [Y|N], default: [N]
+      --mysql_truncate_table                mysql truncate table flag [Y|N], default: [N]
+      --csv_optionally_enclosed_by          optionally enclosed_by for csv file
+      --max_rows=MAX_ROWS                   number of rows scanned to create mysql ddl
+      
+#####  example: truncate mysql table first then export data from hive table to mysql table 
+
+    $ hive_to_mysql --hive_table='tmp_fpv' --mysql_table='tmp_fpv' --mysql_truncate_table='Y'
+    [INFO] running hive export ...
+    [ssh namenode1 hive -e "use staging; set hive.cli.print.header=true; select * from staging.tmp_fpv;" > /data/tmp/tmp_fpv.csv]
+    
+    Hive history file=/tmp/dataproc/hive_job_log_dataproc_201307111627_1487785603.txt
+    OK
+    Time taken: 1.616 seconds
+    OK
+    Time taken: 3.42 seconds
+    [INFO] hive table namenode1:("use staging; set hive.cli.print.header=true; select * from staging.tmp_fpv;") exported to /data/tmp/tmp_fpv.csv ...
+    [INFO] [/data/tmp/tmp_fpv.csv] line count ==>> [689364] lines
+    [INFO] running mysql query on [bidbs]:[bi_staging] ==>> [TRUNCATE TABLE bi_staging.tmp_fpv]
+    [INFO] running mysql query on [bidbs]:[bi_staging] ==>> [LOAD DATA LOCAL INFILE '/data/tmp/tmp_fpv.csv'
+      INTO TABLE tmp_fpv
+      FIELDS TERMINATED BY '\t'    IGNORE 1 LINES]
+    [INFO] running mysql query on [bidbs]:[bi_staging] ==>> [select count(*) from bi_staging.tmp_fpv;]
+    [INFO] mysql table [bidbs]:[bi_staging].[tmp_fpv] row count ==>> [689364]
+    [INFO] file [/data/tmp/tmp_fpv.csv] successfully loaded to mysql table [bidbs]:[bi_staging].[tmp_fpv]
+    [INFO] file [/data/tmp/tmp_fpv.csv] removed
 
 ## mysql_to_csv 
 ## hive_to_csv 
