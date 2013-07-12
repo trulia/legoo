@@ -22,6 +22,7 @@ Out of frustration, I built `legoo` during the [trulia](http://www.trulia.com) i
     - [hive_to_mysql](#hive_to_mysql)
     - [mysql_to_csv](#mysql_to_csv)
     - [hive_to_csv](#hive_to_csv)
+* [Contributors](#contributors)
 * [License](#license)
 
 
@@ -337,9 +338,33 @@ To use `legoo` modules, You specify the module you want to use and the options t
 ## `hive_to_csv` 
 export table/query results from MySQL/Hive to tsv. 
 
+##### `man page`: 
+
+    $ hive_to_csv -h
+    Usage: hive_to_csv [options] 
+    
+    Options:
+      -h, --help                      show this help message and exit
+      --hive_node=HIVE_NODE           source hive node. default: [namenode1]
+      --hive_db=HIVE_DB               source hive database. default: [staging]
+      --hive_table=HIVE_TABLE         source hive table name
+      --hive_query=HIVE_QUERY         Free form query results to be exported
+      --csv_dir=CSV_DIR               dir for tsv
+      --csv_file=CSV_FILE             export hive [table | query results] to tsv
+      --debug=DEBUG                   set the debug flag [Y|N], default: [N]
+    
+##### example: export `Hive query result` to `TSV`: `/data/tmp/dim_time.csv`
+
+    hive_to_csv --hive_node='namenode1' --hive_db='bi' --hive_table='dim_time' --hive_query='select * from dim_time limit 1000' --csv_dir='/data/tmp/'
+
+##### example: export `Hive table` to `TSV`: `/data/tmp/dim_time2.csv`
+
+    hive_to_csv --hive_node='namenode1' --hive_db='bi' --hive_table='dim_time' --csv_dir='/tmp/' --csv_file='dim_time2.csv'
 
 To conclude, legoo is a general purpose tool to transfer data among csv, MySQL and Hive. It can be easily extened with more modules like HBase (work in progress). I had fun building and playing legoo and I hope you do too. 
 
+## Contributors
+* Patrick Luo ([@pluo](patrick.luo2006@gmail.com))
 
 ## License
 [Legoo is licensed under the MIT License](https://github.com/trulia/hologram/blob/master/LICENSE.txt)
