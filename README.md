@@ -204,6 +204,32 @@ To use `legoo` modules, You specify the module you want to use and the options t
 ## `mysql_to_hive` 
 `mysql_to_hive` transfer data from `MySQL` `table` or `query result` to `Hive` table with options: `--mysql_quick`, `--mysql_table`, `--mysql_query`, `--hive_db`, `--hive_create_table`, `--hive_overwrite`, `--hive_table`, `--hive_partition`, `--remove_carriage_return` etc. When `--hive_create_table` set to 'Y', `Hive` table created based on `MySQL DDL`. For large data transfer with more than 1 million rows, set option `--mysql_quick` to use less resource on `MySQL` server. option `--hive_partition` allows user to transfer data directly to `Hive` partition. `--remove_carriage_return` removes carriage return from the `MySQL` source. For column name key word clashes, column name postfix with _new automatically. Non zero RC returned and exception raised if validation failed such as row count not match from MySQL to Hive. 
 
+##### display help
+
+    $ mysql_to_hive -h
+    Usage: mysql_to_hive [options]
+    
+    Options:
+      -h, --help                                        show this help message and exit
+      --mysql_ini=MYSQL_INI                             mysql initial file for user, password and default db, default: [mysql.ini]
+      --mysql_host=MYSQL_HOST                           mysql host for source data, default: [bidbs]
+      --mysql_db=MYSQL_DB         	       	      	    mysql database for source data, default: [bi]
+      --mysql_user=MYSQL_USER                           OPTIONAL: mysql user, if not specified, get user from mysql_ini
+      --mysql_password=MYSQL_PASSWORD                   OPTIONAL: mysql password, if not specified, get password from mysql_ini
+      --mysql_quick=MYSQL_QUICK                         OPTIONAL: --quick option for mysql client, default:[N]
+      --mysql_table=MYSQL_TABLE                         mysql table to be exported
+      --mysql_query=MYSQL_QUERY                         query results to be exported
+      --hive_node=HIVE_NODE                             OPTIONAL: target hive node. default: [namenode1]
+      --hive_port=HIVE_PORT                             OPTIONAL: target hive port. default: 10000
+      --hive_db=HIVE_DB                                 OPTIONAL: target hive db. default: [staging]
+      --hive_ddl=HIVE_DDL                               OPTIONAL: hive DDL for target hive table. default created from source mysql table
+      --hive_create_table=HIVE_CREATE_TABLE             OPTIONAL: CREATE_TABLE flag for hive table DDL. default: [N]
+      --hive_overwrite=HIVE_OVERWRITE                   OPTIONAL: OVERWRITE flag for hive table loading. default: [Y]
+      --hive_table=HIVE_TABLE                           OPTIONAL: hive table name. default: created from csv file name
+      --hive_partition=HIVE_PARTITION                   partition name i.e. date_int=20130428
+      --remove_carriage_return=REMOVE_CARRIAGE_RETURN   OPTIONAL: remove carriage return from mysql source table. default: [N]
+      --debug=DEBUG                                     set the debug flag [Y|N], default: [N]
+
 ##### example: transfer query results from `MySQL` to `Hive` table `email_archive.fe_emailrecord_archive` `partition (date_key=20130710)` on `Hive` cluster. remove carriage return from the source data before transfer. 
     
     $ mysql_to_hive --mysql_host='maildb-slave' --mysql_db='Email' --mysql_table='FE_EmailRecord' --mysql_query="select f.* from Email.FE_EmailRecord f where time_stamp > '2013-05-01' and time_stamp < '2013-05-02'" --hive_table='fe_emailrecord_archive' --hive_db='email_archive'  --remove_carriage_return='Y' --hive_partition="date_key=20130710"
