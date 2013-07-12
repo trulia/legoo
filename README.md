@@ -306,6 +306,7 @@ To use `legoo` modules, You specify the module you want to use and the options t
     [INFO] file [/data/tmp/tmp_fpv.csv] removed
 
 ## `mysql_to_csv`
+`mysql_to_csv` export `MySQL table` or `MySQL query result` to `TSV`. 
 
 ##### `man page`: 
 
@@ -336,7 +337,7 @@ To use `legoo` modules, You specify the module you want to use and the options t
 
 
 ## `hive_to_csv` 
-export table/query results from MySQL/Hive to tsv. 
+`hive_to_csv` export `Hive table` or `Hive query result` to `TSV`. 
 
 ##### `man page`: 
 
@@ -361,7 +362,7 @@ export table/query results from MySQL/Hive to tsv.
 
     hive_to_csv --hive_node='namenode1' --hive_db='bi' --hive_table='dim_time' --csv_dir='/tmp/' --csv_file='dim_time2.csv'
 
-To conclude, legoo is a general purpose tool to transfer data among csv, MySQL and Hive. It can be easily extened with more modules like HBase (work in progress). I had fun building and playing legoo and I hope you do too. 
+##### To conclude, `legoo` is a general purpose tool to transfer data among `CSV`, `MySQL`, `Hive`and `HBase` (incubating). 
 
 ## Contributors
 * Patrick Luo ([emacsornothing@gmail.com]())
