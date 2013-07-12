@@ -367,4 +367,4 @@ To conclude, legoo is a general purpose tool to transfer data among csv, MySQL a
 * Patrick Luo ([emacsornothing@gmail.com]())
 
 ## License
-[Legoo is licensed under the MIT License](https://github.com/trulia/hologram/blob/master/LICENSE.txt)
+[Legoo is licensed under the MIT License](https://github.com/trulia/legoo/blob/master/LICENSE.txt)
