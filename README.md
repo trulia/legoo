@@ -1,20 +1,20 @@
-legoo: A developer tool for data transfer among `CSV`, `MySQL`, and `Hive` (`HBase` incubating)
+Legoo: A developer tool for data transfer among `CSV`, `MySQL`, and `Hive` (`HBase` incubating)
 =====
 
-`legoo` is a collection of modules to automate data transfer among `CSV`, `MySQL`, and `Hive`. It's written in `Python` and provides ease of programming, flexibility, and extensibility. 
+`legoo` is a collection of modules to automate data transfer among `CSV`, `MySQL`, and `Hive`. It's written in `Python` and provides ease of programming, flexibility, transparency, and extensibility. 
 
-I refer `CSV` as text file with delimiters such as comma, tab, etc. 
+I refer `CSV` as plain text file with delimiters such as comma, tab, etc. 
 
-There are tools already such as `MySQL LOAD INFILE`, [Sqoop] (http://sqoop.apache.org) etc. then why create a new tool? 
+There are tools already such as `MySQL LOAD INFILE`, [Sqoop](http://sqoop.apache.org) etc. Then why reinvent the wheel? 
 
-Let me start with `MySQL LOAD INFILE` limitations which can load `CSV` into `MySQL`. First, target table must be pre defined. This would be a challenge if there are a lot of fields in `CSV`. For instance,  we have `CSV` from `salesforce` having 200+ columns. Creating ddl with appropriate column length is frustrating to say the least; second, `CSV` must be local on MySQL server; third, lacking of verification from `CSV` to table count, do not raise error and return non-zero RC when count not match.  
+Let me start with `MySQL LOAD INFILE` limitations which load `CSV` into `MySQL`. First, target table must be pre defined. This would be a challenge if there are a lot of fields in `CSV`. For instance,  we have `CSV` from `salesforce` having 200+ columns. Creating ddl with appropriate column length is frustrating to say the least; Second, `CSV` must be local on `MySQL` server; Third, lacking of verification such as `CSV` line count to table count; 
 
-To transfer data between `Hadoop`/`Hive` and `MySQL`, `Sqoop` from [Cloudera] (http://www.cloudera.com) is the best tool available yet. However, the performance did not quite meet our expectations; It crashes if there is carriage return in `MySQL` source, or if there are keyword clashes;  User can not set the `Hive` target dynamically;  It can not create `MySQL` table dynamically when export `Hive` table to `MySQL`; does not support `CSV` to `Hive`; can only connect to `Hive` DB `default`;  on and on ... 
+To transfer data between `Hadoop`/`Hive` and `MySQL`, [Sqoop](http://sqoop.apache.org) from [Cloudera](http://www.cloudera.com) is the best tool available yet. However, the performance did not meet my expectations; It crasheed when there is carriage return or hive keywords (i.e. location) in `MySQL` source; User can not set the `Hive` target dynamically;  It can not create `MySQL` table dynamically when export `Hive` table to `MySQL`; Nor support `CSV` to `Hive`; can not connect to `Hive` DB other than `default`; the list goes on and on and on and on ... 
 
 Out of frustration, I built `legoo` during the [trulia](http://www.trulia.com) innovation week! 
 
 * [Prerequisites](#prerequisites)
-* [Legoo modules usage](#legoo-modules-usage)
+* [Legoo modules](#legoo-modules)
     - [csv_dump](#csv_dump)
     - [csv_to_mysql](#csv_to_mysql)
     - [csv_to_hive](#csv_to_hive)
@@ -25,14 +25,13 @@ Out of frustration, I built `legoo` during the [trulia](http://www.trulia.com) i
 * [License](#license)
 
 
-
 ## Prerequisites
 
 Before you can use `legoo`, `Python` module `MySQLdb` and `Hive` must be installed. Update `shebang` and `hive_path` reference to reflect your system configuration. Dir /data/tmp must be created to store tempoarary files.
 
 `legoo` has been tested under `Python 2.6`, `MySQL 5.1`, and `Hive 0.7`. This document assumes you are using a Linux or Linux-like environment. 
 
-## Legoo modules usage
+## Legoo modules
 To use `legoo` modules, You specify the module you want to use and the options that control the module. All modules ships with a help module. To display help with all avaialble options and sample usages, enter: `module_name -h` or `module_name --help` I will go over each of those modules briefly in turn. 
 
 ### `csv_dump` 
