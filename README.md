@@ -364,7 +364,7 @@ export table/query results from MySQL/Hive to tsv.
 To conclude, legoo is a general purpose tool to transfer data among csv, MySQL and Hive. It can be easily extened with more modules like HBase (work in progress). I had fun building and playing legoo and I hope you do too. 
 
 ## Contributors
-* Patrick Luo ([@pluo](patrick.luo2006@gmail.com))
+* Patrick Luo ([emacsornothing@gmail.com]())
 
 ## License
 [Legoo is licensed under the MIT License](https://github.com/trulia/hologram/blob/master/LICENSE.txt)
