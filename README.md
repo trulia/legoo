@@ -83,7 +83,7 @@ To use `legoo` modules, You specify the module you want to use and the options t
       --mysql_host=MYSQL_HOST                       target mysql host. default: [bidbs]
       --mysql_db=MYSQL_DB                           target mysql database. default: [bi_staging]
       --mysql_table=MYSQL_TABLE                     target mysql table name
-      --mysql_create_table=MYSQL_CREATE_TABLE       mysql drop table flag [Y|N]. default: [N]
+      --mysql_create_table=MYSQL_CREATE_TABLE       mysql create table flag [Y|N]. default: [N]
       --mysql_truncate_table=MYSQL_TRUNCATE_TABLE   mysql truncate table flag [Y|N]. default: [N]
       --csv_delimiter=CSV_DELIMITER                 delimiter for csv file. default: [tab]
       --csv_header=CSV_HEADER                       header flag for csv file. default: [Y]
