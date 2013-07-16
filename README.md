@@ -13,9 +13,10 @@ To transfer data between `Hadoop`/`Hive` and `MySQL`, [Sqoop](http://sqoop.apach
 
 Out of frustration, I built `legoo` during the [trulia](http://www.trulia.com) innovation week! 
 
-For ease of programming, I created modules which are wrapper scripts with python function call. thus, user don't need to know Python. Her is the high level view of modules. more details covered at [Legoo modules](#legoo-modules). 
+For ease of programming, I created modules which are wrapper scripts with python function call. Here is the high level view of modules. more details covered in [Legoo modules](#legoo-modules). 
 
-![diagram](https://github.com/trulia/legoo/blob/master/modules.jpg "module diagram")
+![diagram](https://raw.github.com/trulia/legoo/master/modules.jpg?login=pluo-trulia&token=974a2a8c87eb001d1219ab09e1794b18 "module diagram")
+
 
 * [Prerequisites](#prerequisites)
 * [Legoo modules](#legoo-modules)
@@ -32,7 +33,7 @@ For ease of programming, I created modules which are wrapper scripts with python
 
 ## Prerequisites
 
-Before you can use `legoo`, `Python` module `MySQLdb` and `Hive` must be installed. Update `shebang` and `hive_path` reference to reflect your system configuration. Dir /data/tmp must be created to store tempoarary files.
+Before you can use `legoo`, `Python` module `MySQLdb` and `Hive` must be installed. Update `Python shebang` and `hive_path` reference to reflect your system configuration. Dir /data/tmp must be created to store tempoarary files.
 
 `legoo` has been tested under `Python 2.6`, `MySQL 5.1`, and `Hive 0.7`. This document assumes you are using a Linux or Linux-like environment. 
 
