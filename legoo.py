@@ -551,7 +551,10 @@ def hive_to_csv( **kwargs ):
     raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
 
   if (not csv_file):
-    csv_file = csv_dir.strip() + hive_table + ".csv"                  # set default csv
+    if (not hive_table):
+      csv_file = csv_dir.strip() + str(os.getpid()).strip() + ".csv"                  # set default csv
+    else:
+      csv_file = csv_dir.strip() + hive_table + ".csv"                  # set default csv
   else: 
     csv_file = csv_dir.strip() + csv_file.strip()                 # set default csv
   if (not hive_query):
@@ -625,26 +628,29 @@ def csv_to_mysql(**kwargs):
                         mysql_query="TRUNCATE TABLE %s.%s" % (mysql_db, mysql_table), \
                         debug=debug)
 
+  # check table row count
+  mysql_query = "select count(*) from %s.%s;" % (mysql_db, mysql_table)
+
+  (affected_rows, number_rows) = execute_mysql_query(mysql_host=mysql_host, mysql_db=mysql_db, mysql_query=mysql_query, row_count='Y', debug=debug)
+  table_count_before_load = number_rows
+  
   # load csv into mysql table
   csv_to_mysql_table(mysql_host=mysql_host, mysql_db=mysql_db, mysql_table=mysql_table, \
                      csv_file=csv_file, csv_header=csv_header, csv_delimiter=csv_delimiter, \
                      csv_optionally_enclosed_by=csv_optionally_enclosed_by, debug=debug)
 
-  # check table row count
-  mysql_query = "select count(*) from %s.%s;" % (mysql_db, mysql_table)
 
   (affected_rows, number_rows) = execute_mysql_query(mysql_host=mysql_host, mysql_db=mysql_db, mysql_query=mysql_query, row_count='Y', debug=debug)
-  print "[INFO] mysql table [%s]:[%s].[%s] row count ==>> [%s]"  %  (mysql_host, mysql_db, mysql_table, number_rows)
+  table_count_after_load = number_rows
+  # delta: diff between table count before load and after load
+  number_rows = int(table_count_after_load) - int(table_count_before_load) 
+  print "[INFO] mysql table [%s]:[%s].[%s] load count ==>> [%s]"  %  (mysql_host, mysql_db, mysql_table, number_rows)
 
   # verify the csv line count and table count
-  if (mysql_create_table.strip().lower() == 'y' or mysql_truncate_table.strip().lower() == 'y'): 
-    if ( int(num_lines) == int(number_rows) ):
-      print "[INFO] file [%s] successfully loaded to mysql table [%s]:[%s].[%s]"  %  (csv_file, mysql_host, mysql_db, mysql_table)
-    else:
-       raise Exception("[ERROR] file [%s] count does not match mysql table [%s]:[%s].[%s] count"  %  (csv_file, mysql_host, mysql_db, mysql_table))
+  if ( int(num_lines) == int(number_rows) ):
+    print "[INFO] file [%s] successfully loaded to mysql table [%s]:[%s].[%s]"  %  (csv_file, mysql_host, mysql_db, mysql_table)
   else:
-    print "[WARNING] file [%s] line count does not match mysql table [%s]:[%s].[%s] count due to possible pre exiting records"  %  (csv_file, mysql_host, mysql_db, mysql_table)
-   
+    raise Exception("[ERROR] file [%s] count does not match mysql table [%s]:[%s].[%s] load count"  %  (csv_file, mysql_host, mysql_db, mysql_table))
 
 
 def csv_to_mysql_table(**kwargs):
