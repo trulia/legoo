@@ -7,13 +7,13 @@ I refer `CSV` as plain text file with delimiters such as comma, tab, etc.
 
 There are tools already such as `MySQL LOAD INFILE`, [Sqoop](http://sqoop.apache.org) etc. Then why reinvent the wheel? 
 
-Let me start with `MySQL LOAD INFILE` limitations which load `CSV` into `MySQL`. First, target table must be pre defined. This would be a challenge if there are a lot of fields in `CSV`. For instance,  we have `CSV` from `salesforce` having 200+ columns. Creating ddl with appropriate column length is frustrating to say the least; Second, `CSV` must be local on `MySQL` server; Third, lacking of verification such as `CSV` line count to table count; 
+Let me start with `MySQL LOAD INFILE` limitations that load `CSV` into `MySQL`. First, target table must be pre defined. This would be a challenge if there were a lot of fields in `CSV`. For instance, we have `CSV` from `salesforce` having 200+ columns. Creating `MySQL DDL` with appropriate column length is frustrating to say the least; second, `CSV` must be local on `MySQL` server; Third, lacking of verification such as `CSV` line count to table count; 
 
-To transfer data between `Hadoop`/`Hive` and `MySQL`, [Sqoop](http://sqoop.apache.org) from [Cloudera](http://www.cloudera.com) is the best tool available. However, the performance did not meet my expectations; It crasheed when there is carriage return or hive keywords (i.e. location) in `MySQL DDL`; User can not set the `Hive` cluster dynamically;  It can not create `MySQL table` dynamically when export `Hive` table to `MySQL`; Nor support `CSV` to `Hive`; only connect to `Hive` DB `default`; the list goes on and on and on and on. 
+To transfer data between `Hadoop`/`Hive` and `MySQL`, [Sqoop](http://sqoop.apache.org) from [Cloudera](http://www.cloudera.com) is the best tool available. However, the performance did not meet my expectations; It crashed when there is carriage return or hive keywords (i.e. location) in `MySQL DDL`; User can not set the `Hive` cluster dynamically; It can not create `MySQL table` dynamically when export `Hive` table to `MySQL`; Nor support `CSV` to `Hive`; only connect to `Hive` DB `default`; the list goes on and on and on and on. 
 
 Out of frustration, I built `legoo` during the [trulia](http://www.trulia.com) innovation week! 
 
-For ease of programming, I created modules which are wrapper scripts with python function call. Here is the high level view of modules. more details covered in [Legoo modules](#legoo-modules). 
+For ease of programming, I created modules,  which are wrapper scripts with python function call. Here is the high level view of modules. More details covered in [Legoo modules](#legoo-modules). 
 
 ![diagram](https://raw.github.com/trulia/legoo/master/modules.jpg?login=pluo-trulia&token=974a2a8c87eb001d1219ab09e1794b18 "module diagram")
 
@@ -33,15 +33,15 @@ For ease of programming, I created modules which are wrapper scripts with python
 
 ## Prerequisites
 
-Before you can use `legoo`, `Python` module `MySQLdb` and `Hive` must be installed. Update `Python shebang` and `hive_path` reference to reflect your system configuration. Dir /data/tmp must be created to store tempoarary files.
+Before you can use `legoo`, `Python` module `MySQLdb` and `Hive` must be installed. Update `Python shebang` and `hive_path` reference to reflect your system configuration. Dir /data/tmp must be created to store temporary files.
 
 `legoo` has been tested under `Python 2.6`, `MySQL 5.1`, and `Hive 0.7`. This document assumes you are using a Linux or Linux-like environment. 
 
 ## Legoo modules
-To use `legoo` modules, You specify the module you want to use and the options that control the module. All modules ships with a help module. To display help with all avaialble options and sample usages, enter: `module_name -h` or `module_name --help` I will go over each of those modules briefly in turn. 
+To use `legoo` modules, you specify the module you want to use and the options that control the module. All modules ship with a help module. To display help with all avaialble options and sample usages, enter: `module_name -h` or `module_name --help` I will go over each of those modules briefly in turn. 
 
 ### `csv_dump` 
-`csv_dump` is a `CSV` viewer with options for `--delimiter` and `--line_number`. It maps each field value to field name defined in header, print them out vertically with line number and column number. `csv_dump` allows user to dig into the middle of file with `--line_number` option. It is extremely handy to investigate data issues in a large `CSV` file having tons of fields. 
+`csv_dump` is a `CSV` viewer with options for `--delimiter` and `--line_number`. It maps each field value to field name defined in header; print them out vertically with line number and column number. `csv_dump` allows user to dig into the middle of file with `--line_number` option. It is extremely handy to investigate data issues in a large `CSV` file having tons of fields. 
 ##### `man page`: 
     $ csv_dump -h 
     Usage: csv_dump [options]
@@ -152,7 +152,7 @@ To use `legoo` modules, You specify the module you want to use and the options t
       --csv_delimiter=CSV_DELIMITER              delimiter for csv file, default: [tab]
       --debug=DEBUG                              debug flag [Y|N], default: [N]
 
-##### example: generate `Hive` `DDL` from `CSV` header, create table based on `DDL`, then load data to table in `staging` db on `Hive` cluster . note: ommited options take on default value. there are ~250 fields in CSV. Imagine creating `DDL` yourself. 
+##### example: generate `Hive` `DDL` from `CSV` header, create table based on `DDL`, then load data to table in `staging` db on `Hive` cluster . note: omitted options take on default value. For `CSV` haveing ~250 fields, imagine creating `MySQL DDL` yourself. 
     
     $ csv_to_hive --hive_create_table='Y' --hive_table='tmp_opp' test/opportunity2.csv 
     [INFO] running hive query on [namenode1]:[staging] ==>> [DROP TABLE IF EXISTS tmp_opportunity2]
