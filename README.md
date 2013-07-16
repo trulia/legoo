@@ -9,7 +9,7 @@ There are tools already such as `MySQL LOAD INFILE`, [Sqoop](http://sqoop.apache
 
 Let me start with `MySQL LOAD INFILE` limitations that load `CSV` into `MySQL`. First, target table must be pre defined. This would be a challenge if there were a lot of fields in `CSV`. For instance, we have `CSV` from `salesforce` having 200+ columns. Creating `MySQL DDL` with appropriate column length is frustrating to say the least; second, `CSV` must be local on `MySQL` server; Third, lacking of verification such as `CSV` line count to table count; 
 
-To transfer data between `Hadoop`/`Hive` and `MySQL`, [Sqoop](http://sqoop.apache.org) from [Cloudera](http://www.cloudera.com) is the best tool available. However, the performance did not meet my expectations; It crashed when there is carriage return or hive keywords (i.e. location) in `MySQL DDL`; User can not set the `Hive` cluster dynamically; It can not create `MySQL table` dynamically when export `Hive` table to `MySQL`; Nor support `CSV` to `Hive`; only connect to `Hive` DB `default`; the list goes on and on and on and on. 
+To transfer data between `Hadoop`/`Hive` and `MySQL`, [Sqoop](http://sqoop.apache.org) from [Cloudera](http://www.cloudera.com) is the best tool available. However, AS of 4/1/2013, the performance did not meet my expectations; It crashed when there is carriage return or hive keywords (i.e. location) in `MySQL DDL`; User can not set the `Hive` cluster dynamically; It can not create `MySQL table` dynamically when export `Hive` table to `MySQL`; Nor support `CSV` to `Hive`; only connect to `Hive` DB `default`; the list goes on and on and on and on. 
 
 Out of frustration, I built `legoo` during the [trulia](http://www.trulia.com) innovation week! 
 
