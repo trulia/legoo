@@ -13,6 +13,10 @@ To transfer data between `Hadoop`/`Hive` and `MySQL`, [Sqoop](http://sqoop.apach
 
 Out of frustration, I built `legoo` during the [trulia](http://www.trulia.com) innovation week! 
 
+For ease of programming, I created modules which are wrapper scripts with python function call. thus, user don't need to know Python. Her is the high level view of modules. more details covered at [Legoo modules](#legoo-modules). 
+
+![diagram](https://github.com/trulia/legoo/blob/master/modules.jpg "module diagram")
+
 * [Prerequisites](#prerequisites)
 * [Legoo modules](#legoo-modules)
     - [csv_dump](#csv_dump)
