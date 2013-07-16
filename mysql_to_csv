@@ -1,4 +1,4 @@
-#!/usr/bin/python26
+#!/usr/bin/python
 
 # pluo, Apr 1, 2013
 # PATH=$PATH:/home/dataproc/bi/lib/python # add python lib to path

@@ -1,4 +1,4 @@
-#!/usr/bin/python26
+#!/usr/bin/python
 
 # pluo
 # innovation week of Mar 25, 2013
