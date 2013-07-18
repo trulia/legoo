@@ -30,12 +30,15 @@ For ease of programming, I created modules,  which are wrapper scripts with pyth
 * [Contributors](#contributors)
 * [License](#license)
 
-
 ## Prerequisites
 
-Before you can use `legoo`, `Python` module `MySQLdb` and `Hive` must be installed. Update `Python shebang` and `hive_path` reference to reflect your system configuration. Dir /data/tmp must be created to store temporary files.
+* Before you can use `legoo`, `Python` module `MySQLdb` and `Hive` must be installed.
+* Update `Python shebang` and `hive_path` reference to reflect your system configuration.
+* Create /data/tmp to store temporary files.
+* Start `HiveServer` (Hive thrift server) on `Hive Cluster`
 
-`legoo` has been tested under `Python 2.6`, `MySQL 5.1`, and `Hive 0.7`. This document assumes you are using a Linux or Linux-like environment. 
+`modules` have been tested on `Python 2.6`, `MySQL 5.1`, `Hive 0.7`,  and `Hive 0.10`. This document assumes you are using a Linux o\
+r Linux-like environment.
 
 ## Legoo modules
 To use `legoo` modules, you specify the module you want to use and the options that control the module. All modules ship with a help module. To display help with all avaialble options and sample usages, enter: `module_name -h` or `module_name --help` I will go over each of those modules briefly in turn. 
