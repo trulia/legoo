@@ -50,33 +50,40 @@ def main():
                     help="OPTIONAL: CREATE_TABLE flag for hive table DDL. default: [N]", default='N')
   parser.add_option("--hive_overwrite", dest="hive_overwrite",
                     help="OPTIONAL: OVERWRITE flag for hive table loading. default: [Y]", default='Y')
+  parser.add_option("--mapred_job_priority", dest="mapred_job_priority",
+                    help="OPTIONAL: map reduce job priority [VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW]",  default='NORMAL')
   parser.add_option("--hive_table", dest="hive_table",
                     help="OPTIONAL: hive table name. default: created from csv file name")
   parser.add_option("--hive_partition", dest="hive_partition",
                     help="partition name i.e. date_int=20130428")
   parser.add_option("--remove_carriage_return", dest="remove_carriage_return",
                     help="OPTIONAL: remove carriage return from mysql source table. default: [N]", default='N')
-  parser.add_option('--debug', dest="debug", help="set the debug flag [Y|N], default: [N]", default='N')
+  parser.add_option("-q", "--quiet", "--silent",  dest="quiet",
+                    help="OPTIONAL: suppress messages to stdout. default: [N]", default='N')
+  parser.add_option("-d", "--debug", dest="debug", help="OPTIONAL: debug flag [Y|N], default: [N]", default='N')
   (options, args) = parser.parse_args()
 
   legoo.mysql_to_hive(mysql_ini              = options.mysql_ini, \
-                    mysql_host             = options.mysql_host, \
-                    mysql_db               = options.mysql_db, \
-                    mysql_user             = options.mysql_user, \
-                    mysql_password         = options.mysql_password, \
-                    mysql_quick            = options.mysql_quick, \
-                    mysql_table            = options.mysql_table, \
-                    mysql_query            = options.mysql_query, \
-                    hive_node              = options.hive_node, \
-                    hive_port              = options.hive_port, \
-                    hive_db                = options.hive_db, \
-                    hive_create_table      = options.hive_create_table, \
-                    hive_table             = options.hive_table, \
-                    hive_partition         = options.hive_partition, \
-                    hive_ddl               = options.hive_ddl, \
-                    hive_overwrite         = options.hive_overwrite, \
-                    remove_carriage_return = options.remove_carriage_return
-                    )
+                      mysql_host             = options.mysql_host, \
+                      mysql_db               = options.mysql_db, \
+                      mysql_user             = options.mysql_user, \
+                      mysql_password         = options.mysql_password, \
+                      mysql_quick            = options.mysql_quick, \
+                      mysql_table            = options.mysql_table, \
+                      mysql_query            = options.mysql_query, \
+                      hive_node              = options.hive_node, \
+                      hive_port              = options.hive_port, \
+                      hive_db                = options.hive_db, \
+                      hive_create_table      = options.hive_create_table, \
+                      hive_table             = options.hive_table, \
+                      hive_partition         = options.hive_partition, \
+                      hive_ddl               = options.hive_ddl, \
+                      hive_overwrite         = options.hive_overwrite, \
+                      mapred_job_priority    = options.mapred_job_priority, \
+                      remove_carriage_return = options.remove_carriage_return, \
+                      quiet                  = options.quiet, \
+                      debug                  = options.debug
+                      )
   # pass
 
 if __name__ == '__main__':

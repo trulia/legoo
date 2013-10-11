@@ -1,25 +1,26 @@
 Legoo: A developer tool for data transfer among `CSV`, `MySQL`, and `Hive` (`HBase` incubating)
 =====
 
-`legoo` is a collection of modules to automate data transfer among `CSV`, `MySQL`, and `Hive`. It's written in `Python` and provides ease of programming, flexibility, transparency, and extensibility. 
+`legoo` is a collection of modules to automate data transfer among `CSV`, `MySQL`, and `Hive`. It's written in `Python` and provides ease of programming, flexibility, transparency, and extensibility.
 
-I refer `CSV` as plain text file with delimiters such as comma, tab, etc. 
+I refer `CSV` as plain text file with delimiters such as comma, tab, etc.
 
-There are tools already such as `MySQL LOAD INFILE`, [Sqoop](http://sqoop.apache.org) etc. Then why reinvent the wheel? 
+There are tools already such as `MySQL LOAD INFILE`, [Sqoop](http://sqoop.apache.org) etc. Then why reinvent the wheel?
 
-Let me start with `MySQL LOAD INFILE` limitations that load `CSV` into `MySQL`. First, target table must be pre defined. This would be a challenge if there were a lot of fields in `CSV`. For instance, we have `CSV` from `salesforce` having 200+ columns. Creating `MySQL DDL` with appropriate column length is frustrating to say the least; second, `CSV` must be local on `MySQL` server; Third, lacking of verification such as `CSV` line count to table count; 
+Let me start with `MySQL LOAD INFILE` limitations that load `CSV` into `MySQL`. First, target table must be pre defined. This would be a challenge if there were a lot of fields in `CSV`. For instance, we have `CSV` from `salesforce` having 200+ columns. Creating `MySQL DDL` with appropriate column length is frustrating to say the least; second, `CSV` must be local on `MySQL` server; Third, lacking of verification such as `CSV` line count to table count;
 
-To transfer data between `Hadoop`/`Hive` and `MySQL`, [Sqoop](http://sqoop.apache.org) from [Cloudera](http://www.cloudera.com) is the best tool available. However, as of 4/1/2013, the performance did not meet my expectations; It crashed when there is carriage return or hive keywords (i.e. location) in `MySQL DDL`; User can not set the `Hive` cluster dynamically; It can not create `MySQL table` dynamically when export `Hive` table to `MySQL`; Nor support `CSV` to `Hive`; only connect to `Hive` DB `default`; the list goes on and on and on and on. 
+To transfer data between `Hadoop`/`Hive` and `MySQL`, [Sqoop](http://sqoop.apache.org) from [Cloudera](http://www.cloudera.com) is the best tool available. However, as of 4/1/2013, the performance did not meet my expectations; It crashed when there is carriage return or hive keywords (i.e. location) in `MySQL DDL`; User can not set the `Hive` cluster dynamically; It can not create `MySQL table` dynamically when export `Hive` table to `MySQL`; Nor support `CSV` to `Hive`; only connect to `Hive` DB `default`; can not specify mapred job priority; the list goes on and on and on and on.
 
-Out of frustration, I built `legoo` during the [trulia](http://www.trulia.com) innovation week! 
+Out of frustration, I built `legoo` during the [trulia](http://www.trulia.com) innovation week!
 
-For ease of programming, I created modules,  which are wrapper scripts with python function call. Here is the high level view of modules. More details covered in [Legoo modules](#legoo-modules). 
+For ease of programming, I created modules,  which are wrapper scripts with python function call. Here is the high level view of modules. More details covered in [Legoo modules](#legoo-modules).
 
 ![diagram](https://raw.github.com/trulia/legoo/master/modules.jpg?login=pluo-trulia&token=974a2a8c87eb001d1219ab09e1794b18 "module diagram")
 
 
 * [Prerequisites](#prerequisites)
-* [Legoo modules](#legoo-modules)
+* [Unit Test](#unit-test)
+* [Legoo Modules](#legoo-modules)
     - [csv_dump](#csv_dump)
     - [csv_to_mysql](#csv_to_mysql)
     - [csv_to_hive](#csv_to_hive)
@@ -27,36 +28,43 @@ For ease of programming, I created modules,  which are wrapper scripts with pyth
     - [hive_to_mysql](#hive_to_mysql)
     - [mysql_to_csv](#mysql_to_csv)
     - [hive_to_csv](#hive_to_csv)
+    - [wait_for_file](#wait_for_file)
+    - [wait_for_table](#wait_for_table)
+* [Future Release](#future-release)
 * [Contributors](#contributors)
 * [License](#license)
+
 
 ## Prerequisites
 
 * Before you can use `legoo`, `Python` module `MySQLdb` and `Hive` must be installed.
 * Update `Python shebang` and `hive_path` reference to reflect your system configuration.
 * Create /data/tmp to store temporary files.
-* Start `HiveServer` (Hive thrift server) on `Hive Cluster`
+* Start Hive thrift server `HiveServer` on `Hive Cluster`
 
-`modules` have been tested on `Python 2.6`, `MySQL 5.1`, `Hive 0.7`,  and `Hive 0.10`. This document assumes you are using a Linux o\
-r Linux-like environment.
+`modules` have been tested on `Python 2.6`, `MySQL 5.1`, `Hive 0.7`,  and `Hive 0.10`. This document assumes you are using a Linux or Linux-like environment.
 
-## Legoo modules
-To use `legoo` modules, you specify the module you want to use and the options that control the module. All modules ship with a help module. To display help with all avaialble options and sample usages, enter: `module_name -h` or `module_name --help` I will go over each of those modules briefly in turn. 
+## Unit Test
+Run unit test `test/unittest_legoo.py` for functional testing. Sample csv `census_population.csv` was used to load into `MySQL` and `Hive` table. User need to supply `Hive` and `MySQL` enviroment variables under section `setUp`
 
-### `csv_dump` 
-`csv_dump` is a `CSV` viewer with options for `--delimiter` and `--line_number`. It maps each field value to field name defined in header; print them out vertically with line number and column number. `csv_dump` allows user to dig into the middle of file with `--line_number` option. It is extremely handy to investigate data issues in a large `CSV` file having tons of fields. 
-##### `man page`: 
-    $ csv_dump -h 
+## Legoo Modules
+To use `legoo` modules, you specify the module you want to use and the options that control the module. All modules ship with a help module. To display help with all avaialble options and sample usages, enter: `module_name -h` or `module_name --help` I will go over each of those modules briefly in turn.
+
+### `csv_dump`
+`csv_dump` is a `CSV` viewer with options for `--delimiter` and `--line_number`. It maps each field value to field name defined in header; print them out vertically with line number and column number. `csv_dump` allows user to dig into the middle of file with `--line_number` option. It is extremely handy to investigate data issues in a large `CSV` file having tons of fields.
+##### `man page`:
+    $ csv_dump -h
     Usage: csv_dump [options]
     Options:
       -h, --help                                          show this help message and exit
       -d CSV_DELIMITER, --csv_delimiter=CSV_DELIMITE      csv file delimiter, default: [tab]
       -l LINES, --lines=LINES                             number of lines to dump out, default: [2]
       -n LINE_NUMBER, --line_number=LINE_NUMBER           starting line number to dump out, default: [2]
+
 ##### example: pretty print for line 505 in tab delimited file: /data/tmp/dim_listing_delta.csv
 
     $ csv_dump -d 'tab' -n 505 /data/tmp/dim_listing_delta.csv
-    
+
     Line number                         <<<<    [505]
     [c001]  legacy_listing_id           ==>>    [987654321]
     [c002]  legacy_property_id          ==>>    [123456789]
@@ -81,7 +89,7 @@ To use `legoo` modules, you specify the module you want to use and the options t
 
 ## `csv_to_mysql`
 `csv_to_mysql` load `CSV` to target `MySQL` table with options `--mysql_create_table`, `--mysql_truncate_table`, `--csv_delimiter`, `--csv_header`, `--csv_optionally_enclosed_by` etc. when `--mysql_create_table` set to 'Y', DDL generated from `CSV` header, column length calculated by scanning the file, and finally run the DDL on target MySQL server to create table. Non zero RC returned and exception raised for errors like `CSV` count not match table count
-##### `man page`: 
+##### `man page`:
     $ csv_to_mysql -h
     Usage: csv_to_mysql [options] sample.csv
 
@@ -89,6 +97,8 @@ To use `legoo` modules, you specify the module you want to use and the options t
       -h, --help                                    show this help message and exit
       --mysql_ini=MYSQL_INI                         mysql initial file for user, password and default db,default: [mysql.ini]
       --mysql_host=MYSQL_HOST                       target mysql host. default: [bidbs]
+      --mysql_user=MYSQL_USER                       OPTIONAL: mysql user, if not specified, get user from mysql_ini
+      --mysql_password=MYSQL_PASSWORD               OPTIONAL: mysql password, if not specified, get password from mysql_ini
       --mysql_db=MYSQL_DB                           target mysql database. default: [bi_staging]
       --mysql_table=MYSQL_TABLE                     target mysql table name
       --mysql_create_table=MYSQL_CREATE_TABLE       mysql create table flag [Y|N]. default: [N]
@@ -97,33 +107,35 @@ To use `legoo` modules, you specify the module you want to use and the options t
       --csv_header=CSV_HEADER                       header flag for csv file. default: [Y]
       --csv_optionally_enclosed_by                  csv_optionally enclosed_by for csv file
       --max_rows=MAX_ROWS                           number of rows in csv file scanned to find column length
-      --debug=DEBUG                                 debug flag [Y|N]. default: [N]
-##### example: generate `MySQL` `DDL` from `CSV` header, create table based on `DDL`, then load data. note: omitted options take on default value. there are ~250 fields in CSV. Imagine creating `DDL` yourself. 
-    
-    $ csv_to_mysql --mysql_create_table='y' --mysql_table='tmp_opp' test/opportunity2.csv 
+      -q --quiet --silent                           OPTIONAL: suppress messages to stdout. default: [N]
+      -d --debug                                    OPTIONAL: debug flag [Y|N], default: [N]
+
+##### example: generate `MySQL` `DDL` from `CSV` header, create table based on `DDL`, then load data. note: omitted options take on default value. there are ~250 fields in CSV. Imagine creating `DDL` yourself.
+
+    $ csv_to_mysql --mysql_create_table='y' --mysql_table='tmp_opp' test/opportunity2.csv
     [INFO] [test/opportunity2.csv] line count ==>> [999] lines
     [INFO] running mysql query on [bidbs]:[bi_staging] ==>> [CREATE TABLE tmp_opp (
-    AccountId                                         VARCHAR(18), 
-    Accounting_Approval__c                            VARCHAR(0), 
-    Ad_History__c                                     VARCHAR(53), 
-    Ad_Server__c                                      VARCHAR(0), 
-    Agent_Contract_Length__c                          VARCHAR(6), 
-    Agent_Name_formula__c                             VARCHAR(37), 
-    Agent_Opportunity_Ranking__c                      VARCHAR(0), 
-    AGENT_PHI_Score__c                                VARCHAR(6), 
-    Agent_Phone__c                                    VARCHAR(25), 
-    AGENT_primary_target_Id_c__c                      VARCHAR(5), 
-    Agent_Product_Type__c                             VARCHAR(4), 
-    Agent_Referral__c                                 VARCHAR(0), 
-    AGENT_target_Id_csv_c__c                          VARCHAR(0), 
-    AGENT_Target_Locations__c                         VARCHAR(1641), 
-    Agent_ZiP__c                                      VARCHAR(0), 
-    Allocation_Type__c                                VARCHAR(11), 
-    AM_Notes__c                                       VARCHAR(0), 
-    AM_Urgency__c                                     VARCHAR(0), 
-    Amount                                            VARCHAR(9), 
-    ...  [250 columns here] ... 
-    ZSO_Type__c                                       VARCHAR(15) 
+    AccountId                                         VARCHAR(18),
+    Accounting_Approval__c                            VARCHAR(0),
+    Ad_History__c                                     VARCHAR(53),
+    Ad_Server__c                                      VARCHAR(0),
+    Agent_Contract_Length__c                          VARCHAR(6),
+    Agent_Name_formula__c                             VARCHAR(37),
+    Agent_Opportunity_Ranking__c                      VARCHAR(0),
+    AGENT_PHI_Score__c                                VARCHAR(6),
+    Agent_Phone__c                                    VARCHAR(25),
+    AGENT_primary_target_Id_c__c                      VARCHAR(5),
+    Agent_Product_Type__c                             VARCHAR(4),
+    Agent_Referral__c                                 VARCHAR(0),
+    AGENT_target_Id_csv_c__c                          VARCHAR(0),
+    AGENT_Target_Locations__c                         VARCHAR(1641),
+    Agent_ZiP__c                                      VARCHAR(0),
+    Allocation_Type__c                                VARCHAR(11),
+    AM_Notes__c                                       VARCHAR(0),
+    AM_Urgency__c                                     VARCHAR(0),
+    Amount                                            VARCHAR(9),
+    ...  [250 columns here] ...
+    ZSO_Type__c                                       VARCHAR(15)
     );]
     [INFO] running mysql query on [bidbs]:[bi_staging] ==>> [LOAD DATA LOCAL INFILE 'test/opportunity2.csv'
       INTO TABLE tmp_opp
@@ -134,13 +146,13 @@ To use `legoo` modules, you specify the module you want to use and the options t
 
 
 
-## `csv_to_hive` 
-`csv_to_hive` load `CSV` into remote `Hive` cluster. When option `--hive_create_table` set to 'Y', `DDL` generated from `CSV` header to create `Hive` table. 
-##### `man page`: 
-    
+## `csv_to_hive`
+`csv_to_hive` load `CSV` into remote `Hive` cluster. When option `--hive_create_table` set to 'Y', `DDL` generated from `CSV` header to create `Hive` table.
+##### `man page`:
+
     $ csv_to_hive -h
     Usage: csv_to_hive [options]
-    
+
     Options:
       -h, --help                                 show this help message and exit
       --hive_node=HIVE_NODE                      OPTIONAL: target hive node. default: [namenode1]
@@ -153,33 +165,35 @@ To use `legoo` modules, you specify the module you want to use and the options t
       --csv_header=CSV_HEADER                    OPTIONAL: csv_header flag csv file default: [Y]
       --remove_carriage_return                   OPTIONAL: remove carriage return from mysql source table. default: [N]
       --csv_delimiter=CSV_DELIMITER              delimiter for csv file, default: [tab]
-      --debug=DEBUG                              debug flag [Y|N], default: [N]
+      -q --quiet --silent                        OPTIONAL: suppress messages to stdout. default: [N]
+      -d --debug                                 OPTIONAL: debug flag [Y|N], default: [N]
 
-##### example: generate `Hive` `DDL` from `CSV` header, create table based on `DDL`, then load data to table in `staging` db on `Hive` cluster . note: omitted options take on default value. For `CSV` haveing ~250 fields, imagine creating `MySQL DDL` yourself. 
-    
-    $ csv_to_hive --hive_create_table='Y' --hive_table='tmp_opp' test/opportunity2.csv 
+
+##### example: generate `Hive` `DDL` from `CSV` header, create table based on `DDL`, then load data to table in `staging` db on `Hive` cluster . note: omitted options take on default value. For `CSV` haveing ~250 fields, imagine creating `MySQL DDL` yourself.
+
+    $ csv_to_hive --hive_create_table='Y' --hive_table='tmp_opp' test/opportunity2.csv
     [INFO] running hive query on [namenode1]:[staging] ==>> [DROP TABLE IF EXISTS tmp_opportunity2]
     [INFO] running hive query on [namenode1]:[staging] ==>> [CREATE TABLE tmp_opportunity2 (
-    AccountId                                     string, 
-    Accounting_Approval__c                        string, 
-    Ad_History__c                                 string, 
-    Ad_Server__c                                  string, 
-    Agent_Contract_Length__c                      string, 
-    Agent_Name_formula__c                         string, 
-    Agent_Opportunity_Ranking__c                  string, 
-    AGENT_PHI_Score__c                            string, 
-    Agent_Phone__c                                string, 
-    AGENT_primary_target_Id_c__c                  string, 
-    Agent_Product_Type__c                         string, 
-    Agent_Referral__c                             string, 
-    AGENT_target_Id_csv_c__c                      string, 
-    AGENT_Target_Locations__c                     string, 
-    Agent_ZiP__c                                  string, 
-    Allocation_Type__c                            string, 
-    AM_Notes__c                                   string, 
-    AM_Urgency__c                                 string, 
-    Amount                                        string, 
-    ... [ 250 columns here ] ... 
+    AccountId                                     string,
+    Accounting_Approval__c                        string,
+    Ad_History__c                                 string,
+    Ad_Server__c                                  string,
+    Agent_Contract_Length__c                      string,
+    Agent_Name_formula__c                         string,
+    Agent_Opportunity_Ranking__c                  string,
+    AGENT_PHI_Score__c                            string,
+    Agent_Phone__c                                string,
+    AGENT_primary_target_Id_c__c                  string,
+    Agent_Product_Type__c                         string,
+    Agent_Referral__c                             string,
+    AGENT_target_Id_csv_c__c                      string,
+    AGENT_Target_Locations__c                     string,
+    Agent_ZiP__c                                  string,
+    Allocation_Type__c                            string,
+    AM_Notes__c                                   string,
+    AM_Urgency__c                                 string,
+    Amount                                        string,
+    ... [ 250 columns here ] ...
     ZSO_Type__c                                   string
     )
     ROW FORMAT DELIMITED FIELDS TERMINATED BY '\011'
@@ -190,24 +204,24 @@ To use `legoo` modules, you specify the module you want to use and the options t
     [INFO] running hive query on [namenode1]:[staging] ==>> [SELECT count(*) from tmp_opportunity2]
     [INFO] [tmp_opportunity2] row count ==>> [999] rows
     [INFO] [test/opportunity2.csv] line count ==>> [999] lines
-    [INFO] file [test/opportunity2.csv] successfully loaded to hive table [namenode1]:[staging].[tmp_opportunity2] 
+    [INFO] file [test/opportunity2.csv] successfully loaded to hive table [namenode1]:[staging].[tmp_opportunity2]
     [INFO] running hive query on [namenode1]:[staging] ==>> [ALTER TABLE tmp_opportunity2 RENAME TO tmp_opp]
     [INFO] running hive query on [namenode1]:[staging] ==>> [DROP TABLE IF EXISTS tmp_opportunity2]
     [INFO] hive table [namenode1]:[staging].[tmp_opp]  successfully built
-    
-## `mysql_to_hive` 
-`mysql_to_hive` transfer data from `MySQL` `table` or `query result` to `Hive` table with options: `--mysql_quick`, `--mysql_table`, `--mysql_query`, `--hive_db`, `--hive_create_table`, `--hive_overwrite`, `--hive_table`, `--hive_partition`, `--remove_carriage_return` etc. When `--hive_create_table` set to 'Y', `Hive` table created based on `MySQL DDL`. For large data transfer with millions rows, set option `--mysql_quick` to 'Y' to avoid buffering on `MySQL` server. option `--hive_partition` allows user to transfer data directly to `Hive` partition. `--remove_carriage_return` removes carriage return from the `MySQL` source. For column name key word clashes, column name postfix with _new automatically. Non zero RC returned and exception raised if validation failed such as row count not match from MySQL to Hive. 
+
+## `mysql_to_hive`
+`mysql_to_hive` transfer data from `MySQL` `table` or `query result` to `Hive` table with options: `--mysql_quick`, `--mysql_table`, `--mysql_query`, `--hive_db`, `--hive_create_table`, `--hive_overwrite`, `--hive_table`, `--hive_partition`, `--remove_carriage_return` etc. When `--hive_create_table` set to 'Y', `Hive` table created based on `MySQL DDL`. For large data transfer with millions rows, set option `--mysql_quick` to 'Y' to avoid buffering on `MySQL` server. option `--hive_partition` allows user to transfer data directly to `Hive` partition. `--remove_carriage_return` removes carriage return from the `MySQL` source. For column name key word clashes, column name postfix with _new automatically. Non zero RC returned and exception raised if validation failed such as row count not match from MySQL to Hive.
 
 ##### `man page`:
 
     $ mysql_to_hive -h
     Usage: mysql_to_hive [options]
-    
+
     Options:
       -h, --help                                        show this help message and exit
       --mysql_ini=MYSQL_INI                             mysql initial file for user, password and default db, default: [mysql.ini]
       --mysql_host=MYSQL_HOST                           mysql host for source data, default: [bidbs]
-      --mysql_db=MYSQL_DB         	       	      	    mysql database for source data, default: [bi]
+      --mysql_db=MYSQL_DB         	       	      	mysql database for source data, default: [bi]
       --mysql_user=MYSQL_USER                           OPTIONAL: mysql user, if not specified, get user from mysql_ini
       --mysql_password=MYSQL_PASSWORD                   OPTIONAL: mysql password, if not specified, get password from mysql_ini
       --mysql_quick=MYSQL_QUICK                         OPTIONAL: --quick option for mysql client, default:[N]
@@ -222,29 +236,31 @@ To use `legoo` modules, you specify the module you want to use and the options t
       --hive_table=HIVE_TABLE                           OPTIONAL: hive table name. default: created from csv file name
       --hive_partition=HIVE_PARTITION                   partition name i.e. date_int=20130428
       --remove_carriage_return=REMOVE_CARRIAGE_RETURN   OPTIONAL: remove carriage return from mysql source table. default: [N]
-      --debug=DEBUG                                     set the debug flag [Y|N], default: [N]
+      -q --quiet --silent                               OPTIONAL: suppress messages to stdout. default: [N]
+      -d --debug                                        OPTIONAL: debug flag [Y|N], default: [N]
 
-##### example: transfer query results from `MySQL` to `Hive` table `email_archive.fe_emailrecord_archive` `partition (date_key=20130710)` on `Hive` cluster. remove carriage return from the source data before transfer. 
-    
+
+##### example: transfer query results from `MySQL` to `Hive` table `email_archive.fe_emailrecord_archive` `partition (date_key=20130710)` on `Hive` cluster. remove carriage return from the source data before transfer.
+
     $ mysql_to_hive --mysql_host='maildb-slave' --mysql_db='Email' --mysql_table='FE_EmailRecord' --mysql_query="select f.* from Email.FE_EmailRecord f where time_stamp > '2013-05-01' and time_stamp < '2013-05-02'" --hive_table='fe_emailrecord_archive' --hive_db='email_archive'  --remove_carriage_return='Y' --hive_partition="date_key=20130710"
-    
+
     [INFO] running hive query on [namenode1]:[email_archive] ==>> [desc fe_emailrecord_archive]
     [INFO] running hive query on [namenode1]:[email_archive] ==>> [DROP TABLE IF EXISTS tmp_FE_EmailRecord]
     [INFO] running hive query on [namenode1]:[email_archive] ==>> [CREATE TABLE tmp_FE_EmailRecord (
-    id                string, 
-    email_type_id     string, 
-    user_id_from      string, 
-    user_id_to        string, 
-    email_from        string, 
-    email_to          string, 
-    user_message      string, 
-    user_copied       string, 
-    create_date       string, 
-    frequency         string, 
-    account_source    string, 
-    emailSource       string, 
-    guid              string, 
-    payload_id        string, 
+    id                string,
+    email_type_id     string,
+    user_id_from      string,
+    user_id_to        string,
+    email_from        string,
+    email_to          string,
+    user_message      string,
+    user_copied       string,
+    create_date       string,
+    frequency         string,
+    account_source    string,
+    emailSource       string,
+    guid              string,
+    payload_id        string,
     time_stamp        string
     )
     ROW FORMAT DELIMITED FIELDS TERMINATED BY '\011'
@@ -256,7 +272,7 @@ To use `legoo` modules, you specify the module you want to use and the options t
     [INFO] running hive query on [namenode1]:[email_archive] ==>> [SELECT count(*) from tmp_FE_EmailRecord]
     [INFO] [tmp_FE_EmailRecord] row count ==>> [3735742] rows
     [INFO] [/data/tmp/FE_EmailRecord.csv2] line count ==>> [3735742] lines
-    [INFO] file [/data/tmp/FE_EmailRecord.csv2] successfully loaded to hive table [namenode1]:[email_archive].[tmp_FE_EmailRecord]. 
+    [INFO] file [/data/tmp/FE_EmailRecord.csv2] successfully loaded to hive table [namenode1]:[email_archive].[tmp_FE_EmailRecord].
     [INFO] running hive query on [namenode1]:[email_archive] ==>> [ALTER TABLE fe_emailrecord_archive DROP IF EXISTS PARTITION (date_key=20130710)]
     [INFO] running hive query on [namenode1]:[email_archive] ==>> [ALTER TABLE fe_emailrecord_archive ADD PARTITION (date_key=20130710)]
     [INFO] running hive query on [namenode1]:[email_archive] ==>> [INSERT OVERWRITE TABLE fe_emailrecord_archive partition (date_key=20130710) select * from tmp_FE_EmailRecord]
@@ -267,14 +283,14 @@ To use `legoo` modules, you specify the module you want to use and the options t
 
 
 
-## `hive_to_mysql` 
-`hive_to_mysql` transfer data from `Hive table` or `Hive query result` to `MySQL table`. When `--mysql_create_table` set to 'Y', `MySQL table` created based on `Hive table DDL`. option `--mysql_truncate_table` allows user to truncate `MySQL table` first before loading. Non zero RC returned and exception raised if validation failed such as row count not match from `MySQL` to `Hive`. 
+## `hive_to_mysql`
+`hive_to_mysql` transfer data from `Hive table` or `Hive query result` to `MySQL table`. When `--mysql_create_table` set to 'Y', `MySQL table` created based on `Hive table DDL`. option `--mysql_truncate_table` allows user to truncate `MySQL table` first before loading. Non zero RC returned and exception raised if validation failed such as row count not match from `MySQL` to `Hive`.
 
 ##### `man page`
 
     $ hive_to_mysql -h
     Usage: hive_to_mysql [options]
-    
+
     Options:
       -h, --help                            show this help message and exit
       --hive_node=HIVE_NODE                 source hive node. default: [namenode1]
@@ -284,19 +300,23 @@ To use `legoo` modules, you specify the module you want to use and the options t
       --debug=DEBUG                         set the debug flag [Y|N], default: [N]
       --mysql_ini=MYSQL_INI                 mysql initial file for user, password and default db, default: [mysql.ini]
       --mysql_host=MYSQL_HOST               target mysql host, default: [bidbs]
+      --mysql_user=MYSQL_USER               OPTIONAL: mysql user, if not specified, get user from mysql_ini
+      --mysql_password=MYSQL_PASSWORD       OPTIONAL: mysql password, if not specified, get password from mysql_ini
       --mysql_db=MYSQL_DB                   target mysql database, default: [bi_staging]
       --mysql_table=MYSQL_TABLE             target mysql table name
       --mysql_create_table                  mysql drop table flag [Y|N], default: [N]
       --mysql_truncate_table                mysql truncate table flag [Y|N], default: [N]
       --csv_optionally_enclosed_by          optionally enclosed_by for csv file
       --max_rows=MAX_ROWS                   number of rows scanned to create mysql ddl
-      
-#####  example: truncate mysql table first then export data from hive table to mysql table 
+      -q --quiet --silent                   OPTIONAL: suppress messages to stdout. default: [N]
+      -d --debug                            OPTIONAL: debug flag [Y|N], default: [N]
+
+#####  example: truncate mysql table first then export data from hive table to mysql table
 
     $ hive_to_mysql --hive_table='tmp_fpv' --mysql_table='tmp_fpv' --mysql_truncate_table='Y'
     [INFO] running hive export ...
     [ssh namenode1 hive -e "use staging; set hive.cli.print.header=true; select * from staging.tmp_fpv;" > /data/tmp/tmp_fpv.csv]
-    
+
     Hive history file=/tmp/dataproc/hive_job_log_dataproc_201307111627_1487785603.txt
     OK
     Time taken: 1.616 seconds
@@ -314,13 +334,13 @@ To use `legoo` modules, you specify the module you want to use and the options t
     [INFO] file [/data/tmp/tmp_fpv.csv] removed
 
 ## `mysql_to_csv`
-`mysql_to_csv` export `MySQL table` or `MySQL query result` to `TSV`. 
+`mysql_to_csv` export `MySQL table` or `MySQL query result` to `TSV`.
 
-##### `man page`: 
+##### `man page`:
 
     $ mysql_to_csv -h
-    Usage: mysql_to_csv [options] 
-    
+    Usage: mysql_to_csv [options]
+
     Options:
       -h, --help                           show this help message and exit
       --mysql_ini=MYSQL_INI                mysql initial file for user, password and default db, default: [mysql.ini]
@@ -333,25 +353,27 @@ To use `legoo` modules, you specify the module you want to use and the options t
       --mysql_query=MYSQL_QUERY            query results to be exported
       --csv_dir=CSV_DIR                    dir for csv file to be exported, default: [/data/tmp]
       --csv_file=CSV_FILE                  the csv file to be exported, default: [table_name.csv]
-      --debug=DEBUG                        set the debug flag [Y|N], default: [N]
-    
+      -q --quiet --silent                  OPTIONAL: suppress messages to stdout. default: [N]
+      -d --debug                           OPTIONAL: debug flag [Y|N], default: [N]
+
+
 ##### example: export `MySQL query result` to `TSV`
 
     mysql_to_csv --mysql_host='bidbs' --mysql_db='salesforce' --mysql_table='opportunity' --mysql_quick='Y' --mysql_query='select * from opportunity limit 10000' --csv_dir='/data/tmp'
-    
+
 ##### example: export `MySQL table` to `TSV`
-    
+
     mysql_to_csv --mysql_host='bidbs' --mysql_db='bi' --mysql_table='dim_time' --csv_dir='/data/tmp'
 
 
-## `hive_to_csv` 
-`hive_to_csv` export `Hive table` or `Hive query result` to `TSV`. 
+## `hive_to_csv`
+`hive_to_csv` export `Hive table` or `Hive query result` to `TSV`.
 
-##### `man page`: 
+##### `man page`:
 
     $ hive_to_csv -h
-    Usage: hive_to_csv [options] 
-    
+    Usage: hive_to_csv [options]
+
     Options:
       -h, --help                      show this help message and exit
       --hive_node=HIVE_NODE           source hive node. default: [namenode1]
@@ -360,8 +382,10 @@ To use `legoo` modules, you specify the module you want to use and the options t
       --hive_query=HIVE_QUERY         Free form query results to be exported
       --csv_dir=CSV_DIR               dir for tsv
       --csv_file=CSV_FILE             export hive [table | query results] to tsv
-      --debug=DEBUG                   set the debug flag [Y|N], default: [N]
-    
+      -q --quiet --silent             OPTIONAL: suppress messages to stdout. default: [N]
+      -d --debug                      OPTIONAL: debug flag [Y|N], default: [N]
+
+
 ##### example: export `Hive query result` to `TSV`: `/data/tmp/dim_time.csv`
 
     hive_to_csv --hive_node='namenode1' --hive_db='bi' --hive_table='dim_time' --hive_query='select * from dim_time limit 1000' --csv_dir='/data/tmp/'
@@ -370,7 +394,66 @@ To use `legoo` modules, you specify the module you want to use and the options t
 
     hive_to_csv --hive_node='namenode1' --hive_db='bi' --hive_table='dim_time' --csv_dir='/tmp/' --csv_file='dim_time2.csv'
 
-##### To conclude, `legoo` is a general purpose tool to transfer data among `CSV`, `MySQL`, `Hive`and `HBase` (incubating). 
+## `wait_for_file`
+`wait_for_file` check if file exists and modified time after `mtime_after`.  if not, retry based on `sleep_interval`, `num_retry`, `stop_at`
+
+##### `man page`:
+    $ ./wait_for_file -h
+    Usage:
+      check if file exists and mtime after [mtime_after].
+      if not, retry based on [sleep_interval], [num_retry], [stop_at]
+      =================================================================================
+      wait_for_file -s 10 -a '2013-10-10 13:44' -n 20 -f test.txt -m '2013-10-10 13:51'
+      =================================================================================
+
+    Options:
+      -h, --help            show this help message and exit
+      -s --sleep_interval   OPTIONAL: sleep for approximately s seconds between iterations. default: [60]
+      -n --num_retry        OPTIONAL: number of retry
+      -m --mtime_after      OPTIONAL: file modified after datetime [yyyy-mm-dd hh:mm]. i.e. [2013-10-08 14:30]
+      -a --stop_at          OPTIONAL: stop checking file at datetime [yyyy-mm-dd hh:mm]. i.e. [2013-10-08 15:30]
+      -f --file             file name
+      -q --quiet --silent   OPTIONAL: suppress messages to stdout. default: [N]
+      -d --debug            OPTIONAL: debug flag [Y|N], default: [N]
+
+## `wait_for_table`
+`wait_for_table` check if table exists and has updated after `update_after`. otherwise, retry based on `sleep_interval`, `num_retry` and/or `stop_at`
+
+##### `man page`:
+    $ ./wait_for_table -h
+    Usage:
+      check if table exists and has updated after [update_after]
+      if not, retry based on [sleep_interval], [num_retry] and/or [stop_at]
+      NOTE:
+      1. need access to INFORMATION_SCHEMA.TABLES to retrieve update_time
+      2. option [stop_at] i.e. [2013-10-08 15:30], together with [update_after]
+         i.e. [2013-10-09 14:25], define the table wait window
+      3. option [ETL_TABLE] and [ETL_JOB] are trulia specific which retrive table last update
+         from proprietary [AUDIT_JOB] database
+      ======================================================
+      ./wait_for_table --mysql_table='tmp_dim_property' --update_after='2013-10-10 16:07' --sleep_interval=10 --num_retry=20 --stop_at='2013-10-10 16:12' --debug='Y'
+      ======================================================
+
+    Options:
+      -h, --help            show this help message and exit
+      --mysql_host          target mysql host. default: [bidbs]
+      --mysql_db            target mysql database. default: [bi_staging]
+      --mysql_user          mysql user
+      --mysql_password      mysql password
+      --mysql_table         mysql table name
+      --update_after        mysql table modified after datetime [yyyy-mm-dd hh:mm] i.e. [2013-10-09 14:25]
+      --etl_table           mysql table name. WARNING: TRULIA proprietary
+      --etl_job             job name. WARNING: TRULIA proprietary
+      -s --sleep_interval   OPTIONAL: sleep for approximately s seconds between iterations. default: [60]
+      -n --num_retry        OPTIONAL: number of retry
+      -a --stop_at          OPTIONAL: stop checking file at datetime [yyyy-mm-dd hh:mm]. i.e. [2013-10-08 15:30]
+      -q --quiet --silent   OPTIONAL: suppress messages to stdout. default: [N]
+      -d --debug            OPTIONAL: debug flag [Y|N], default: [N]
+
+##### To conclude, `legoo` is a general purpose tool to transfer data among `CSV`, `MySQL`, `Hive`and `HBase` (incubating).
+
+## Future Release
+Next release would have new options like `dry_run`, `escape_hive_keyword`, `config_file` for unit testing, etc. 
 
 ## Contributors
 * Patrick Luo ([emacsornothing@gmail.com]())

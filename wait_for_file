@@ -1,0 +1,44 @@
+#!/usr/bin/python
+
+import legoo
+import sys
+from optparse import OptionParser
+
+def main():
+  usage = """
+  check if file exists and mtime after [mtime_after].
+  if not, retry based on [sleep_interval], [num_retry], [stop_at]
+  =================================================================================
+  wait_for_file -s 10 -a '2013-10-10 13:44' -n 20 -f test.txt -m '2013-10-10 13:51'
+  =================================================================================
+  """
+  # create new parser object
+  parser = OptionParser(usage=usage)
+
+  
+  parser.add_option("-s", "--sleep_interval", dest="sleep_interval",
+                    help="OPTIONAL: sleep for approximately s seconds between iterations. default: [60]", default=60)
+  parser.add_option("-n", "--num_retry", dest="num_retry", help="OPTIONAL: number of retry")
+  parser.add_option("-m", "--mtime_after", dest="mtime_after", \
+                    help="OPTIONAL: file modified after datetime [yyyy-mm-dd hh:mm]. i.e. [2013-10-08 14:30]")
+  parser.add_option("-a", "--stop_at", dest="stop_at", \
+                    help="OPTIONAL: stop checking file at datetime [yyyy-mm-dd hh:mm]. i.e. [2013-10-08 15:30]")
+  parser.add_option("-f", "--file", dest="file", help="file name")
+  parser.add_option("-q", "--quiet", "--silent",  dest="quiet",
+                    help="OPTIONAL: suppress messages to stdout. default: [N]", default='N')
+  parser.add_option("-d", "--debug", dest="debug", help="OPTIONAL: debug flag [Y|N], default: [N]", default='N')
+  (options, args) = parser.parse_args()
+
+  legoo.wait_for_file(sleep_interval = options.sleep_interval, \
+                      num_retry      = options.num_retry, \
+                      mtime_after    = options.mtime_after, \
+                      stop_at        = options.stop_at, \
+                      file           = options.file, \
+                      quiet          = options.quiet, \
+                      debug          = options.debug
+                      ) 
+
+if __name__ == '__main__':
+  main()
+
+

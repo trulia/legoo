@@ -31,10 +31,14 @@ def main():
                     help="target mysql host. default: [bidbs]", default='bidbs')
   parser.add_option("--mysql_db", dest="mysql_db",
                     help="target mysql database. default: [bi_staging]", default='bi_staging')
+  parser.add_option("--mysql_user", dest="mysql_user",
+                    help="OPTIONAL: mysql user, if not specified, get user from mysql_ini")
+  parser.add_option("--mysql_password", dest="mysql_password",
+                    help="OPTIONAL: mysql password, if not specified, get password from mysql_ini")
   parser.add_option("--mysql_table", dest="mysql_table",
                     help="target mysql table name")
   parser.add_option("--mysql_create_table", dest="mysql_create_table",
-                    help="mysql drop table flag [Y|N]. default: [N]", default='N')
+                    help="mysql create table flag [Y|N]. default: [N]", default='N')
   parser.add_option("--mysql_truncate_table", dest="mysql_truncate_table",
                     help="mysql truncate table flag [Y|N]. default: [N]", default='N')
   # register csv options
@@ -46,25 +50,28 @@ def main():
                     help="csv_optionally enclosed_by for csv file")
   parser.add_option("--max_rows", dest="max_rows",
                     help="number of rows in csv file scanned to find column length")
-
-  parser.add_option("--debug", dest="debug", help="debug flag [Y|N]. default: [N]", default='N')
-
+  parser.add_option("-q", "--quiet", "--silent",  dest="quiet",
+                    help="OPTIONAL: suppress messages to stdout. default: [N]", default='N')
+  parser.add_option("-d", "--debug", dest="debug", help="OPTIONAL: debug flag [Y|N], default: [N]", default='N')
   # parse option and args
   (options, args) = parser.parse_args()
 
   for csv_file in args:
     legoo.csv_to_mysql(mysql_host                 = options.mysql_host, \
-                     mysql_db                   = options.mysql_db, \
-                     mysql_table                = options.mysql_table, \
-                     mysql_create_table         = options.mysql_create_table, \
-                     mysql_truncate_table       = options.mysql_truncate_table, \
-                     csv_file                   = csv_file, \
-                     csv_delimiter              = options.csv_delimiter, \
-                     csv_header                 = options.csv_header, \
-                     csv_optionally_enclosed_by = options.csv_optionally_enclosed_by, \
-                     max_rows                   = options.max_rows, \
-                     debug                      = options.debug
-                     )
+                       mysql_db                   = options.mysql_db, \
+                       mysql_user                 = options.mysql_user, \
+                       mysql_password             = options.mysql_password, \
+                       mysql_table                = options.mysql_table, \
+                       mysql_create_table         = options.mysql_create_table, \
+                       mysql_truncate_table       = options.mysql_truncate_table, \
+                       csv_file                   = csv_file, \
+                       csv_delimiter              = options.csv_delimiter, \
+                       csv_header                 = options.csv_header, \
+                       csv_optionally_enclosed_by = options.csv_optionally_enclosed_by, \
+                       max_rows                   = options.max_rows, \
+                       quiet                      = options.quiet, \
+                       debug                      = options.debug
+                       )
 
 if __name__ == '__main__':
   main()

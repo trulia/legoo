@@ -1,36 +1,61 @@
 #!/usr/bin/python
 
-# pluo
+# Patrick Luo
 # innovation week of Mar 25, 2013
-# objective: high performance, easy to use/maintain
+# objective: high performance, easy to use and maintain, flexibility to run anywhere on any DB (HIVE and MySQL), etc.
 
 import os, sys, subprocess, inspect
 import MySQLdb      # MySQL DB module
 import ConfigParser # parse mysql ini file
 import csv          # csv module for csv parsing
+import logging
+import datetime
+from optparse import OptionParser
+from time import sleep
+from pprint import pprint # pretty print for dictionary etc
+
+# logging config
+logging.basicConfig(
+  filename =  os.path.dirname(os.path.realpath(__file__)) + '/legoo.log',   # set log file to legoo directory
+  format   = "%(levelname)-10s:[%(module)s][%(funcName)s][%(asctime)s]:%(message)s",
+  level    = logging.INFO
+)
+format = logging.Formatter("%(levelname)-10s:[%(module)s][%(funcName)s][%(asctime)s]:%(message)s")
+
+# create a handler for stdout
+info_hand = logging.StreamHandler(sys.stdout)
+info_hand.setLevel(logging.INFO)
+info_hand.setFormatter(format)
+
+# top-level logger print to file
+legoo = logging.getLogger("legoo")
+legoo.addHandler(info_hand)
 
 # add hive path
 hive_path='/usr/lib/hive/lib/py/'
 if hive_path not in sys.path:
       sys.path.insert(0, hive_path)
 
+trulia_mysql_host = ['bidbs', 'bidbm', 'bedb1', 'maildb-slave', 'db30', 'rodb-dash', 'db9', 'crad103']
+
 def count_lines(**kwargs):
   """return line count for input file
   --------------------------------------------------------------------
   count_lines(file='/tmp/msa.csv', skip_header='Y')
   --------------------------------------------------------------------
-  |  file        = None
-  |  skip_header = N
-  |  debug       = N
   """
-  debug       = kwargs.pop("debug", "N")
+  debug     = kwargs.pop("debug", "N")
   if (debug.strip().lower() == 'y'):
-    print kwargs
+    pprint(kwargs)   # pretty print kwargs
 
   # dictionary initialized with the name=value pairs in the keyword argument list
   file        = kwargs.pop("file", None)
   skip_header = kwargs.pop("skip_header", 'N' ) # flag to skip header
+  quiet              = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
+    legoo.error("Unsupported configuration options %s" % list(kwargs))  # log error
     raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
 
   p = subprocess.Popen(['wc', '-l', file],
@@ -44,24 +69,28 @@ def count_lines(**kwargs):
   if (skip_header.strip().lower() == 'y'):
     num_lines = num_lines - 1
 
-  print '[INFO] [%s] line count ==>> [%s] lines' % (file, num_lines)
+  legoo.info("[%s] line count ==>> [%s] lines" % (file, num_lines))
   return num_lines
 
 def remove_file(**kwargs):
   """remove file
   ---------------------------------
-  count_lines(file='/tmp/msa.csv') 
+  count_lines(file='/tmp/msa.csv')
   ---------------------------------
   |  file        = None
   |  debug       = N
   """
   debug       = kwargs.pop("debug", "N")
   if (debug.strip().lower() == 'y'):
-    print kwargs
+    pprint(kwargs)
 
   # dictionary initialized with the name=value pairs in the keyword argument list
   file        = kwargs.pop("file", None)
+  quiet       = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
     raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
   p = subprocess.Popen(['rm', '-f', file],
                        stdout=subprocess.PIPE,
@@ -70,35 +99,37 @@ def remove_file(**kwargs):
   if p.returncode != 0:
     raise IOError(err)
 
-  print '[INFO] file [%s] removed' % (file)
+  legoo.info('File [%s] removed' % (file))
 
 def count_hive_table_rows (**kwargs):
   """return hive table row count
-  |  hive_node   = namenode1
-  |  hive_port   = 10000
-  |  hive_db     = staging
-  |  hive_table  = None
-  |  debug       = N
   -----------------------------------------------------------------------------------
-  count_hive_table_rows(hive_node='namenode1', hive_db='bi', hive_table='dual')
+  count_hive_table_rows(hive_node='namenode2s', hive_db='bi', hive_table='dual')
   -----------------------------------------------------------------------------------
   """
 
   # dictionary initialized with the name=value pairs in the keyword argument list
-  debug       = kwargs.pop("debug", "N")
+  debug               = kwargs.pop("debug", "N")
   if (debug.strip().lower() == 'y'):
-    print kwargs
-  hive_node   = kwargs.pop("hive_node", "namenode1")
-  hive_port   = kwargs.pop("hive_port", 10000)
-  hive_db     = kwargs.pop("hive_db", "staging")
-  hive_table  = kwargs.pop("hive_table", None)
+    pprint(kwargs)   # pretty print kwargs
+  hive_node           = kwargs.pop("hive_node", "namenode2s")
+  hive_port           = kwargs.pop("hive_port", 10000)
+  hive_db             = kwargs.pop("hive_db", "staging")
+  hive_table          = kwargs.pop("hive_table", None)
+  mapred_job_priority = kwargs.pop("mapred_job_priority", "NORMAL")
+  quiet               = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
     raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
-  
-  rs = execute_remote_hive_query( hive_node = hive_node, hive_port = hive_port, hive_db = hive_db, \
-                             hive_query = "SELECT count(*) from %s" % (hive_table))
-  table_rows = rs[0] 
-  print '[INFO] [%s] row count ==>> [%s] rows' % (hive_table, table_rows)
+
+  rs = execute_remote_hive_query( hive_node = hive_node, hive_port = hive_port, \
+                                  hive_db = hive_db, mapred_job_priority = mapred_job_priority, \
+                                  hive_query = "SELECT count(*) from %s" % (hive_table))
+  table_rows = rs[0]
+  legoo.info('[%s] row count ==>> [%s] rows' % (hive_table, table_rows))
+
   return table_rows
 
 def mysql_to_hive(**kwargs):
@@ -106,28 +137,10 @@ def mysql_to_hive(**kwargs):
   ------------------------------------------------------------------------------
   mysql_to_hive(mysql_host='bidbs', mysql_table='dim_time', hive_create_table='Y')
   ------------------------------------------------------------------------------
-  |  csv_file               = [ table_name | pid ] + '.tsv'
-  |  remove_carriage_return = N
-  |  mysql_ini              = mysql.ini
-  |  mysql_host             = bidbs
-  |  mysql_db               = bi
-  |  mysql_user             = root
-  |  mysql_password         = root_password
-  |  mysql_quick            = N
-  |  mysql_query            = None
-  |  mysql_table            = None
-  |  csv_dir                = /tmp
-  |  csv_delimiter          = tab
-  |  hive_node              = namenode1
-  |  hive_port              = 10000
-  |  hive_db                = staging
-  |  hive_table             = None
-  |  hive_partition         = None
-  |  hive_ddl               = None
-  |  hive_overwrite         = Y
-  |  hive_create_table      = N
-  |  debug                  = N
   """
+  debug                  = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # pretty print kwargs
   # args for mysql_to_csv
   mysql_ini              = kwargs.pop("mysql_ini", "mysql.ini")
   mysql_host             = kwargs.pop("mysql_host", "bidbs")
@@ -138,7 +151,7 @@ def mysql_to_hive(**kwargs):
   mysql_query            = kwargs.pop("mysql_query", None)
   mysql_password         = kwargs.pop("mysql_password", None)
   # args for csv_to_mysql
-  hive_node              = kwargs.pop("hive_node", "namenode1")
+  hive_node              = kwargs.pop("hive_node", "namenode2s")
   hive_port              = kwargs.pop("hive_port", 10000)
   hive_db                = kwargs.pop("hive_db", "staging")
   hive_table             = kwargs.pop("hive_table", None)
@@ -146,12 +159,16 @@ def mysql_to_hive(**kwargs):
   hive_ddl               = kwargs.pop("hive_ddl", None)
   hive_overwrite         = kwargs.pop("hive_overwrite", "Y")
   hive_create_table      = kwargs.pop("hive_create_table", "N")
+  mapred_job_priority    = kwargs.pop("mapred_job_priority", "NORMAL")
   csv_dir                = kwargs.pop("csv_dir", "/data/tmp/")
   csv_file               = kwargs.pop("csv_file", None)
   csv_delimiter          = kwargs.pop("csv_delimiter", 'tab')            # default to tab csv_delimiter
   remove_carriage_return = kwargs.pop("remove_carriage_return", 'N')
-  debug                  = kwargs.pop("debug", "N")
+  quiet                  = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
     raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
 
   # export mysql to csv
@@ -165,8 +182,8 @@ def mysql_to_hive(**kwargs):
                            mysql_query    = mysql_query, \
                            csv_dir        = csv_dir, \
                            csv_file       = csv_file, \
-                           debug = debug)
-  print "remove_carriage_return => ", remove_carriage_return
+                           quiet          = quiet, \
+                           debug          = debug)
   # load csv to hive
   csv_to_hive(hive_node              =        hive_node, \
               hive_port              =        hive_port, \
@@ -176,9 +193,11 @@ def mysql_to_hive(**kwargs):
               hive_overwrite         =        hive_overwrite, \
               hive_partition         =        hive_partition, \
               hive_ddl               =        hive_ddl, \
+              mapred_job_priority    =        mapred_job_priority, \
               csv_file               =        csv_file, \
               csv_delimiter          =        csv_delimiter, \
               remove_carriage_return =        remove_carriage_return, \
+              quiet                  =        quiet, \
               debug                  =        debug)
   # remove temp files
   remove_file(file=csv_file)
@@ -191,20 +210,10 @@ def mysql_to_csv(**kwargs):
   mysql_to_csv(mysql_host='bidbs', mysql_table='dim_time')
   mysql_to_csv(mysql_host='bidbs', mysql_query='select * from dim_time limit 10')
   -------------------------------------------------------------------------------
-  |  csv_file        = [ table_name | pid ] + '.tsv'
-  |  mysql_ini       = mysql.ini
-  |  mysql_host      = bidbs
-  |  mysql_db        = bi
-  |  mysql_user      = root
-  |  mysql_password  = root_password
-  |  mysql_quick     = N
-  |  mysql_query     = None
-  |  mysql_table     = None
-  |  csv_dir         = /tmp
-  |  csv_file        = tab
-  |  csv_delimiter   = tab
-  |  debug           = N
   """
+  debug     = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # pretty print kwargs
   # dictionary initialized with the name=value pairs in the keyword argument list
   mysql_ini       = kwargs.pop("mysql_ini", "mysql.ini")
   mysql_host      = kwargs.pop("mysql_host", "bidbs")
@@ -217,8 +226,11 @@ def mysql_to_csv(**kwargs):
   csv_dir         = kwargs.pop("csv_dir", "/data/tmp/")
   csv_file        = kwargs.pop("csv_file", None)
   csv_delimiter   = kwargs.pop("csv_delimiter", 'tab')            # default to tab csv_delimiter
-  debug           = kwargs.pop("debug", "N")
+  quiet              = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
     raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
 
   # parse the ini file to pull db variables
@@ -228,27 +240,27 @@ def mysql_to_csv(**kwargs):
   # extend e mysql.ini if necessary
   # set default mysql_user from mysql_ini
   if (not mysql_user):
-    if (mysql_host in ('adhocdb')): # adhocdb use a non-standard password and db.
+    if (mysql_host not in trulia_mysql_host): # adhocdb use a non-standard password and db.
       mysql_user = config.get(mysql_host, "user")
     else:
       mysql_user = config.get('default', "user")
 
   if (not mysql_db):
-    if (mysql_host in ('adhocdb')): # adhocdb use a non-standard password and db.
+    if (mysql_host not in trulia_mysql_host): # adhocdb use a non-standard password and db.
       mysql_db = config.get(mysql_host, "db")
     else:
       mysql_db = config.get('default', "db")
 
   # set default mysql_password from mysql_ini
   if (not mysql_password):
-    if (mysql_host in ('adhocdb')): # adhocdb use a non-standard password and db.
+    if (mysql_host not in trulia_mysql_host): # adhocdb use a non-standard password and db.
       mysql_password = config.get(mysql_host, "password")
     else:
       mysql_password = config.get('default', "password")
 
   # set default csv
   if (not csv_file and not mysql_table ):
-    csv_file = "%s/tmp_%s.csv" % (csv_dir, os.getpid()) # set a temporary csv file name in 
+    csv_file = "%s/tmp_%s.csv" % (csv_dir, os.getpid()) # set a temporary csv file name in
   elif (not csv_file and mysql_table ):
     csv_file = "%s/%s.csv" % (csv_dir, mysql_table)
 
@@ -267,7 +279,8 @@ def mysql_to_csv(**kwargs):
               (mysql_host, mysql_user, mysql_password, mysql_db, mysql_quick, mysql_query, csv_file)
   mysql_cmd_without_password = "mysql -h%s -u%s  %s %s -e \"%s\" > %s" % \
               (mysql_host, mysql_user, mysql_db, mysql_quick, mysql_query, csv_file)
-  print "[INFO] running mysql export to csv ==>> [%s]" % ( mysql_cmd_without_password)
+  legoo.info("Running mysql export to csv ==>> [%s]" % ( mysql_cmd_without_password))
+
   os.system( mysql_cmd )
   if (debug.strip().lower() == 'y'):
     # dump sample
@@ -281,25 +294,15 @@ def csv_to_hive(**kwargs):
   3. upload csv without header to hdfs
   4. load csv in hdfs to hive table
   note: sqoop is buggy, many mandatory parameters, only run on hive node and other restrictions.
-  |  csv_file               = None
-  |  csv_delimiter          = tab
-  |  csv_header             = Y
-  |  remove_carriage_return = N
-  |  hive_node              = namenode1
-  |  hive_port              = 10000
-  |  hive_db                = staging
-  |  hive_table             = None
-  |  hive_ddl               = None
-  |  hive_overwrite         = Y
-  |  hive_create_table      = N
-  |  debug                  = N
   -----------------------------------------------------------------------------------
   csv_to_hive(csv_file='/tmp/fact_imp_pdp.csv', csv_delimiter='tab', hive_create_table='Y')
   -----------------------------------------------------------------------------------
   """
-
+  debug                  = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # pretty print kwargs
   # dictionary initialized with the name=value pairs in the keyword argument list
-  hive_node              = kwargs.pop("hive_node", "namenode1")
+  hive_node              = kwargs.pop("hive_node", "namenode2s")
   hive_port              = kwargs.pop("hive_port", 10000)
   hive_db                = kwargs.pop("hive_db", "staging")
   hive_table             = kwargs.pop("hive_table", None)
@@ -307,41 +310,54 @@ def csv_to_hive(**kwargs):
   hive_overwrite         = kwargs.pop("hive_overwrite", "Y")
   hive_create_table      = kwargs.pop("hive_create_table", "N")
   hive_partition         = kwargs.pop("hive_partition", None)
+  mapred_job_priority    = kwargs.pop("mapred_job_priority", "NORMAL")
   csv_file               = kwargs.pop("csv_file", None)
   csv_header             = kwargs.pop("csv_header", "Y")
   remove_carriage_return = kwargs.pop("remove_carriage_return", "N")
   csv_delimiter          = kwargs.pop("csv_delimiter", 'tab')            # default to tab csv_delimiter
-  debug                  = kwargs.pop("debug", "N")
+  quiet                  = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
+    legoo.error("Unsupported configuration options %s" % list(kwargs))   # log error
     raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
 
   if (not hive_table):
+    legoo.error("hive_table variable need to specified")    # log error
     raise TypeError("[ERROR] hive_table variable need to specified")
 
   # chcek table if exists on hive
-  if (hive_create_table.strip().lower() == 'n'): 
-    execute_remote_hive_query( hive_node = hive_node, hive_port = hive_port, hive_db = hive_db, hive_query = "desc %s" % (hive_table))
-    
+  if (hive_create_table.strip().lower() == 'n'):
+    execute_remote_hive_query( hive_node = hive_node, hive_port = hive_port, \
+                               hive_db = hive_db, mapred_job_priority = mapred_job_priority, \
+                               hive_query = "desc %s" % (hive_table))
+
   if (hive_partition and hive_create_table.strip().lower() == 'y'):
     hive_create_table ='N'
-    print "[WARNING] hive_create_table can not set together with hive_partition. reset hive_create_table = N"
+    legoo.warning("hive_create_table can not set together with hive_partition. reset hive_create_table = N")
 
   # create hive staging table ddl based on csv header, then create hive staging table
   (filename, extension) =  os.path.splitext(os.path.basename(csv_file))
   hive_staging_table = "tmp_%s" % (filename)
   # replace . with _ in table name
   hive_staging_table = hive_staging_table.replace('.', '_')
-  
+
   # create staging table ddl
   (hive_staging_table, hive_ddl) = create_hive_ddl_from_csv(csv_file      = csv_file, \
                                                             csv_delimiter = csv_delimiter, \
                                                             table_name    = hive_staging_table, \
+                                                            quiet          = quiet, \
                                                             debug         = debug)
   # drop staging table if exists
-  execute_remote_hive_query(hive_node = hive_node, hive_port = hive_port, hive_db = hive_db, \
+  execute_remote_hive_query(hive_node  = hive_node, hive_port = hive_port, \
+                            hive_db    = hive_db, mapred_job_priority = mapred_job_priority, \
+                            quiet      = quiet, debug = debug, \
                             hive_query = "DROP TABLE IF EXISTS %s" % (hive_staging_table))
   # create empty table
-  execute_remote_hive_query( hive_node = hive_node, hive_port = hive_port, hive_db = hive_db, hive_query = hive_ddl)
+  execute_remote_hive_query( hive_node = hive_node, hive_port = hive_port, \
+                             hive_db = hive_db, mapred_job_priority = mapred_job_priority, \
+                             quiet      = quiet, debug = debug, \
+                             hive_query = hive_ddl)
 
   # load csv to hive staging table
   csv_to_hive_table(hive_node              = hive_node, \
@@ -349,34 +365,50 @@ def csv_to_hive(**kwargs):
                     hive_db                = hive_db, \
                     hive_table             = hive_staging_table, \
                     hive_overwrite         = hive_overwrite, \
+                    mapred_job_priority    = mapred_job_priority, \
                     csv_file               = csv_file, \
                     csv_delimiter          = csv_delimiter, \
                     csv_header             = csv_header, \
                     remove_carriage_return = remove_carriage_return, \
+                    quiet                  = quiet, \
                     debug                  = debug)
   # example: hive_partition="date_int = 20130428"
   if (hive_partition):
-    if (not hive_table): raise TypeError("[ERROR] hive_table need to specified")
+    if (not hive_table):
+      legoo.error("hive_table need to specified")
+      raise TypeError("[ERROR] hive_table need to specified")
     hive_query = "ALTER TABLE %s DROP IF EXISTS PARTITION (%s)" % (hive_table, hive_partition)
-    execute_remote_hive_query( hive_node = hive_node, hive_port = hive_port, hive_db = hive_db, hive_query = hive_query)
+    execute_remote_hive_query( hive_node  = hive_node, hive_port = hive_port, \
+                               hive_db    = hive_db, mapred_job_priority = mapred_job_priority, \
+                               quiet      = quiet, debug = debug, \
+                               hive_query = hive_query)
     hive_query = "ALTER TABLE %s ADD PARTITION (%s)" % (hive_table, hive_partition)
-    execute_remote_hive_query( hive_node = hive_node, hive_port = hive_port, hive_db = hive_db, hive_query = hive_query)
+    execute_remote_hive_query( hive_node  = hive_node, hive_port = hive_port, \
+                               hive_db    = hive_db, mapred_job_priority = mapred_job_priority, \
+                               quiet      = quiet, debug = debug, \
+                               hive_query = hive_query)
     # load staging table to target table
     hive_query = "INSERT OVERWRITE TABLE %s partition (%s) select * from %s" % (hive_table, hive_partition, hive_staging_table)
-  elif (hive_create_table.strip().lower() == 'y'): 
+  elif (hive_create_table.strip().lower() == 'y'):
     hive_query = "ALTER TABLE %s RENAME TO %s" % (hive_staging_table, hive_table)
-  elif (hive_create_table.strip().lower() == 'n'): 
+  elif (hive_create_table.strip().lower() == 'n'):
     hive_query = "INSERT OVERWRITE TABLE %s select * from %s" % (hive_table, hive_staging_table)
-  execute_remote_hive_query( hive_node = hive_node, hive_port = hive_port, hive_db = hive_db, hive_query = hive_query)
+  execute_remote_hive_query( hive_node  = hive_node, hive_port = hive_port, \
+                             hive_db    = hive_db, mapred_job_priority = mapred_job_priority, \
+                             quiet      = quiet, debug = debug, \
+                             hive_query = hive_query)
 
-  # drop staging table 
+  # drop staging table
   hive_query = "DROP TABLE IF EXISTS %s" % (hive_staging_table)
-  execute_remote_hive_query( hive_node = hive_node, hive_port = hive_port, hive_db = hive_db, hive_query = hive_query)
+  execute_remote_hive_query( hive_node  = hive_node, hive_port = hive_port, \
+                             hive_db    = hive_db, mapred_job_priority = mapred_job_priority, \
+                             quiet      = quiet, debug = debug, \
+                             hive_query = hive_query)
   if (hive_partition):
     partition_str = "PARTITION (%s)" % hive_partition
-  else: 
+  else:
     partition_str = ""
-  print "[INFO] hive table [%s]:[%s].[%s] %s successfully built" % (hive_node, hive_db, hive_table, partition_str)
+  legoo.info("hive table [%s]:[%s].[%s] %s successfully built" % (hive_node, hive_db, hive_table, partition_str))
 
 def csv_to_hive_table(**kwargs):
   """import csv to to existing hive table.
@@ -387,128 +419,133 @@ def csv_to_hive_table(**kwargs):
   2. Two approaches to load into partition table. first approach is load from table. the other
   approach use load infile which is more efficient but input file must have the same format
   i.e. file type, csv_delimiter etc as target table definition. To make the tool more elastic and
-  more fault tolerant, first approach is choosen.   
-  |  csv_file               = None
-  |  csv_header             = Y
-  |  hive_node              = namenode1
-  |  hive_port              = 10000
-  |  hive_db                = staging
-  |  hive_table             = None
-  |  hive_overwrite         = Y
-  |  csv_delimiter          = tab
-  |  remove_carriage_return = N
-  |  debug                  = N
+  more fault tolerant, first approach is choosen.
   -----------------------------------------------------------------------------------
   csv_to_hive_table(csv_file='/tmp/fact_imp_pdp.csv', csv_delimiter='tab', hive_create_table='Y')
   -----------------------------------------------------------------------------------
   """
-
+  debug     = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # pretty print kwargs
   # dictionary initialized with the name=value pairs in the keyword argument list
-  hive_node              = kwargs.pop("hive_node", "namenode1")
+  hive_node              = kwargs.pop("hive_node", "namenode2s")
   hive_port              = kwargs.pop("hive_port", 10000)
   hive_db                = kwargs.pop("hive_db", "staging")
   hive_table             = kwargs.pop("hive_table", None)
   hive_overwrite         = kwargs.pop("hive_overwrite", "Y")
+  mapred_job_priority    = kwargs.pop("mapred_job_priority", "NORMAL")
   csv_file               = kwargs.pop("csv_file", None)
   csv_header             = kwargs.pop("csv_header", "Y")
   csv_delimiter          = kwargs.pop("csv_delimiter", 'tab')            # default to tab csv_delimiter
   remove_carriage_return = kwargs.pop("remove_carriage_return", "N")
-  debug                  = kwargs.pop("debug", "N")
+  quiet                  = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
     raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
 
   # raise exception if partition specified but table name not specified
   if (not hive_table):
-    raise TypeError("[ERROR] table [%s] must specified %s" % (hive_table))
+    legoo.error("Table [%s] must specified!" % (hive_table))
+
+  # trulia specific: ssh login to cdh4 cluster namenode2s as user dwr
+  if (hive_node.strip().lower().split('.')[0] == 'namenode2s'):
+    ssh_hive_node = 'dwr@' + hive_node
+  else:
+    ssh_hive_node = hive_node
 
   # remove the carriage return from input csv file
   if (remove_carriage_return.strip().lower() == 'y'):
     temp_file = csv_file + '2'
     cmd_remove_carriage_return = 'tr -d \'\\r\'  < ' +  csv_file + ' > ' + temp_file # replace carriage return with #
-    print "[INFO] remove special chracter \\ with # ==>> [%s]" % (cmd_remove_carriage_return)
+    legoo.info("remove special chracter \\ with # ==>> [%s]" % (cmd_remove_carriage_return))
     os.system( cmd_remove_carriage_return )  # os.system call is easier than subprocess
     csv_file = temp_file
 
-  
   if (debug.strip().lower() == 'y'):
     # dump the first 2 lines to verify
     csv_dump(csv_file=csv_file, csv_delimiter=csv_delimiter, lines=2)
 
   hdfs_inpath = "/tmp/" + hive_table   # set hdfs_inpath
   # hadoop will not overwrite a file - so we'll nuke it ourselves
-  hdfs_cmd = "ssh %s \'. .bash_profile; hadoop fs -rm %s 2>/dev/null\'" % (hive_node, hdfs_inpath)
-  print "[INFO] running hdfs clean up ==>> [%s]" % ( hdfs_cmd)
+  hdfs_cmd = "ssh %s \'. .bash_profile; hadoop fs -rm %s 2>/dev/null\'" % (ssh_hive_node, hdfs_inpath)
+  legoo.info("running hdfs clean up ==>> [%s]" % ( hdfs_cmd))
   os.system( hdfs_cmd )  # os.system call is easier than subprocess for |
   # upload csv to hdfs. - for stdin, skip header
   if (csv_header.strip().lower() == 'y'):
     skip_header = 2
   else:
     skip_header = 1
-  hdfs_cmd = "tail -n +%d %s | ssh %s \'hadoop fs -put - %s\'" % (skip_header, csv_file, hive_node, hdfs_inpath)
-  print "[INFO] running csv upload to hdfs ==>> [%s]" % ( hdfs_cmd)
+  hdfs_cmd = "tail -n +%d %s | ssh %s \'hadoop fs -put - %s\'" % (skip_header, csv_file, ssh_hive_node, hdfs_inpath)
+  legoo.info("running csv upload to hdfs ==>> [%s]" % ( hdfs_cmd))
   os.system( hdfs_cmd )  # os.system call is easier than subprocess for |
   # load data inpath '/tmp/fact_imp_pdp.csv' overwrite into table tmp_fact_imp_pdp;
   if (csv_delimiter.strip().lower() == 'tab'): csv_delimiter = "\'\\t\'"
   hive_load_query = "load data inpath \'%s\' overwrite into table %s" % (hdfs_inpath, hive_table)
-  execute_remote_hive_query( hive_node = hive_node, hive_port = hive_port, hive_db = hive_db, hive_query = hive_load_query)
+  execute_remote_hive_query( hive_node  = hive_node, hive_port = hive_port, \
+                             hive_db    = hive_db, mapred_job_priority = mapred_job_priority, \
+                             quiet      = quiet, debug = debug, \
+                             hive_query = hive_load_query)
   # verify if table count match csv count
-  number_rows = count_hive_table_rows(hive_node=hive_node, hive_port = hive_port, hive_db=hive_db, hive_table=hive_table)
+  number_rows = count_hive_table_rows(hive_node  = hive_node, hive_port = hive_port, \
+                                      hive_db    = hive_db,   mapred_job_priority = mapred_job_priority, \
+                                      quiet      = quiet,     debug = debug, \
+                                      hive_table = hive_table)
   num_lines = count_lines(file=csv_file, skip_header=csv_header)
   if ( int(num_lines) == int(number_rows) ):
-    print "[INFO] file [%s] successfully loaded to hive table [%s]:[%s].[%s]. \n"  %  \
-          (csv_file, hive_node, hive_db, hive_table)
+    legoo.info("file [%s] successfully loaded to hive table [%s]:[%s].[%s]. \n"  %  \
+               (csv_file, hive_node, hive_db, hive_table))
   else:
+    legoo.error("file [%s] count not match hive table [%s]:[%s].[%s] count. \n"  %  \
+                (csv_file, hive_node, hive_db, hive_table))
     raise Exception("[ERROR] file [%s] count not match hive table [%s]:[%s].[%s] count. \n"  %  \
-          (csv_file, hive_node, hive_db, hive_table)) 
-    
+          (csv_file, hive_node, hive_db, hive_table))
+
 def hive_to_mysql( **kwargs ):
   """export [hive table | user defined query ] to csv_file, create mysql table based on csv_file header,
   then load csv_file to mysql table
-  |  hive_table             = None
-  |  hive_query             = None
-  |  hive_node              = namenode1
-  |  hive_db                = bi
-  |  csv_file               = /tmp/hive_table.csv
-  |  mysql_host             = bidbs
-  |  mysql_db               = bi_staging
-  |  mysql_table            = None
-  |  mysql_truncate_table         = Y
-  |  csv_delimiter          = tab
-  |  csv_optionally_enclosed_by = None
-  |  max_rows               = None
-  |  mysql_create_table     = N
-  |  debug                  = N
   --------------------------------------------------------------------------------------------------
   hive_to_mysql(hive_table='fact_imp_pdp', hive_query='select * from bi.fact_imp_pdp limit 1100000')
   --------------------------------------------------------------------------------------------------
   """
-  # print kwargs
+  debug                         = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # pretty print kwargs
   # dictionary initialized with the name=value pairs in the keyword argument list
-  hive_node                = kwargs.pop("hive_node", "namenode1")
-  hive_db                  = kwargs.pop("hive_db", "bi")
-  hive_table               = kwargs.pop("hive_table", None)
-  csv_file                 = kwargs.pop("csv_file", None)
-  hive_query               = kwargs.pop("hive_query", None)
-  mysql_ini                = kwargs.pop("mysql_ini", "mysql.ini")
-  mysql_host               = kwargs.pop("mysql_host", "bidbs")
-  mysql_db                 = kwargs.pop("mysql_db", "bi_staging")
-  mysql_table              = kwargs.pop("mysql_table", None)
-  mysql_truncate_table           = kwargs.pop("mysql_truncate_table", "Y")
-  csv_delimiter            = kwargs.pop("csv_delimiter", 'tab')            # default to tab csv_delimiter
-  csv_optionally_enclosed_by   = kwargs.pop("csv_optionally_enclosed_by", None)
-  max_rows                 = kwargs.pop("max_rows", None)
-  mysql_create_table       = kwargs.pop("mysql_create_table", "N")
-  debug                    = kwargs.pop("debug", "N")
+  hive_node                     = kwargs.pop("hive_node", "namenode2s")
+  hive_db                       = kwargs.pop("hive_db", "bi")
+  hive_table                    = kwargs.pop("hive_table", None)
+  csv_file                      = kwargs.pop("csv_file", None)
+  hive_query                    = kwargs.pop("hive_query", None)
+  mapred_job_priority           = kwargs.pop("mapred_job_priority", "NORMAL")
+  mysql_ini                     = kwargs.pop("mysql_ini", "mysql.ini")
+  mysql_host                    = kwargs.pop("mysql_host", "bidbs")
+  mysql_db                      = kwargs.pop("mysql_db", "bi_staging")
+  mysql_user                    = kwargs.pop("mysql_user", "root")
+  mysql_password                = kwargs.pop("mysql_password", None)
+  mysql_table                   = kwargs.pop("mysql_table", None)
+  mysql_truncate_table          = kwargs.pop("mysql_truncate_table", "Y")
+  csv_delimiter                 = kwargs.pop("csv_delimiter", 'tab')            # default to tab csv_delimiter
+  csv_optionally_enclosed_by    = kwargs.pop("csv_optionally_enclosed_by", None)
+  max_rows                      = kwargs.pop("max_rows", None)
+  mysql_create_table            = kwargs.pop("mysql_create_table", "N")
+  quiet                         = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
     raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
 
   # export hive table to csv_file
-  csv_file = hive_to_csv(hive_node  = hive_node, \
-                         hive_db    = hive_db, \
-                         hive_table = hive_table, \
-                         csv_file   = csv_file, \
-                         hive_query = hive_query, \
-                         debug      = debug)
+  csv_file = hive_to_csv(hive_node           = hive_node, \
+                         hive_db             = hive_db, \
+                         hive_table          = hive_table, \
+                         mapred_job_priority = mapred_job_priority, \
+                         csv_file            = csv_file, \
+                         hive_query          = hive_query, \
+                         quiet               = quiet, \
+                         debug               = debug)
   # raw_input('press any key to continue ...')
   # dump the first 10 lines to verify
   if (debug.strip().lower() == 'y'):
@@ -517,6 +554,8 @@ def hive_to_mysql( **kwargs ):
   # import csv to mysql table
   csv_to_mysql(mysql_host                 = mysql_host, \
                mysql_db                   = mysql_db, \
+               mysql_user                 = mysql_user, \
+               mysql_password             = mysql_password, \
                mysql_table                = mysql_table, \
                mysql_truncate_table       = mysql_truncate_table, \
                csv_delimiter              = csv_delimiter, \
@@ -524,51 +563,64 @@ def hive_to_mysql( **kwargs ):
                csv_file                   = csv_file, \
                max_rows                   = max_rows, \
                mysql_create_table         = mysql_create_table, \
+               quiet                      = quiet, \
                debug                      = debug)
   remove_file(file=csv_file) # remove temp file
 
 def hive_to_csv( **kwargs ):
   """export [hive table | user defined hive_query ] to csv.
-  |  hive_table = None
-  |  hive_query = None
-  |  hive_node  = namenode1
-  |  hive_db    = bi
-  |  csv_file   = /tmp/hive_table.csv
   ---------------------------------------------------------------------------------------------------------------
   hive_to_csv(hive_table='fact_imp_pdp')
   hive_to_csv(csv_file='/tmp/dim_listing.csv',hive_query='select * from bi.fact_imp_pdp limit 1100000',debug='Y')
   ---------------------------------------------------------------------------------------------------------------
   """
-  # print kwargs
-  hive_node  = kwargs.pop("hive_node", "namenode1")
-  hive_db    = kwargs.pop("hive_db", "bi")
-  hive_table = kwargs.pop("hive_table", None)
-  hive_query = kwargs.pop("hive_query", None)
-  csv_dir    = kwargs.pop("csv_dir", "/data/tmp/")
-  csv_file   = kwargs.pop("csv_file", None)
-  debug      = kwargs.pop("debug", "Y")
+  debug               = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # pretty print kwargs
+  hive_node           = kwargs.pop("hive_node", "namenode2s")
+  hive_db             = kwargs.pop("hive_db", "bi")
+  hive_table          = kwargs.pop("hive_table", None)
+  hive_query          = kwargs.pop("hive_query", None)
+  mapred_job_priority = kwargs.pop("mapred_job_priority", "NORMAL")
+  csv_dir             = kwargs.pop("csv_dir", "/data/tmp/")
+  csv_file            = kwargs.pop("csv_file", None)
+  quiet               = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
+    legoo.error("Unsupported configuration options %s" % list(kwargs))     # log error
     raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
+
+  # trulia specific: login to cdh4 cluster namenode2s as dwr
+  if (hive_node.strip().lower().split('.')[0] == 'namenode2s'):
+    hive_node = 'dwr@' + hive_node
 
   if (not csv_file):
     if (not hive_table):
       csv_file = csv_dir.strip() + str(os.getpid()).strip() + ".csv"                  # set default csv
     else:
       csv_file = csv_dir.strip() + hive_table + ".csv"                  # set default csv
-  else: 
+  else:
     csv_file = csv_dir.strip() + csv_file.strip()                 # set default csv
   if (not hive_query):
     hive_query = "select * from %s.%s" % (hive_db, hive_table) # set default hive_query
 
+  # check and set default value for mapred_job_priority
+  if (mapred_job_priority.strip().upper() in ["VERY_HIGH", "HIGH", "NORMAL", "LOW", "VERY_LOW"]):
+    mapred_job_priority = mapred_job_priority.strip().upper()
+  else:
+    legoo.warning("option mapred_job_priority [%s] must in list [VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW]. default to NORMAL." % (mapred_job_priority))
+    mapred_job_priority = "NORMAL"
+
   # hive_query must enclose with quote
-  hive_query = '\"use %s; set hive.cli.print.header=true; ' % (hive_db) + hive_query + ';\"'
+  hive_query = '\"use %s; set hive.cli.print.header=true; set mapred.job.priority=%s; ' % (hive_db, mapred_job_priority) + hive_query + ';\"'
   hive_cmd = 'ssh %s hive -e ' % (hive_node) + hive_query + ' > ' + csv_file
 
-  print "[INFO] running hive export ...\n[%s]\n" % (hive_cmd)
+  legoo.info("running hive export ...\n[%s]\n" % (hive_cmd))
   with open(csv_file, "w") as outfile:
     rc = subprocess.call(['ssh', hive_node, 'hive', '-e', hive_query], stdout=outfile)
 
-  print "[INFO] hive table %s:(%s) exported to %s ..." % (hive_node, hive_query, csv_file)
+  legoo.info("hive table %s:(%s) exported to %s ..." % (hive_node, hive_query, csv_file))
   return csv_file
 
 def csv_to_mysql(**kwargs):
@@ -577,22 +629,15 @@ def csv_to_mysql(**kwargs):
   ------------------------------------------------------------------------------------------------
   csv_to_mysql(csv_file='/tmp/fact_imp_pdp.csv', csv_delimiter='tab', mysql_create_table = 'Y')
   ------------------------------------------------------------------------------------------------
-  |  mysql_host                 = bidbs
-  |  mysql_db                   = bi_staging
-  |  mysql_create_table         = N
-  |  mysql_table                = None
-  |  mysql_truncate_table       = N
-  |  csv_file                   = None
-  |  csv_header                 = Y
-  |  csv_delimiter              = tab
-  |  csv_optionally_enclosed_by = None
-  |  max_rows                   = None
-  |  debug                      = N
   """
-
-  # dictionary initialized with the name =value pairs in the keyword argument list
+  debug                        = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # pretty print kwargs
+  # dictionary initialized with the (name, value) pairs in the keyword argument list
   mysql_host                   = kwargs.pop("mysql_host", "bidbs")
   mysql_db                     = kwargs.pop("mysql_db", "bi_staging")
+  mysql_user                   = kwargs.pop("mysql_user", None)
+  mysql_password               = kwargs.pop("mysql_password", None)
   mysql_create_table           = kwargs.pop("mysql_create_table", "N")
   mysql_table                  = kwargs.pop("mysql_table", None)
   mysql_truncate_table         = kwargs.pop("mysql_truncate_table", "N")
@@ -601,57 +646,80 @@ def csv_to_mysql(**kwargs):
   csv_delimiter                = kwargs.pop("csv_delimiter", 'tab')            # default to tab csv_delimiter
   csv_optionally_enclosed_by   = kwargs.pop("csv_optionally_enclosed_by", None)
   max_rows                     = kwargs.pop("max_rows", None)
-  debug                        = kwargs.pop("debug", "N")
+  quiet              = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
+    legoo.error("Unsupported configuration options %s" % list(kwargs))         # log error
     raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
 
   # check number of lines in csv file
   num_lines = count_lines(file=csv_file, skip_header=csv_header)
   if (int(num_lines) == 0):
+    legoo.error("%s is empty!" % (csv_file))
     raise TypeError("[ERROR] %s is empty!" % (csv_file))
 
   # create table if mysql_create_table set to Y
   if (mysql_create_table.strip().lower() == 'y'):
     # create ddl
-    (mysql_table_name, ddl) = create_mysql_ddl_from_csv(csv_file=csv_file, csv_delimiter=csv_delimiter, \
-                                                      table_name=mysql_table, max_rows=max_rows, \
-                                                      mysql_create_table=mysql_create_table, debug=debug)
+    (mysql_table_name, ddl) = create_mysql_ddl_from_csv(csv_file           = csv_file, \
+                                                        csv_delimiter      = csv_delimiter, \
+                                                        table_name         = mysql_table, \
+                                                        max_rows           = max_rows, \
+                                                        mysql_create_table = mysql_create_table, \
+                                                        quiet              = quiet, \
+                                                        debug              = debug)
     # create table
-    execute_mysql_query(mysql_host=mysql_host, mysql_db=mysql_db, mysql_query=ddl, debug=debug)
+    execute_mysql_query(mysql_host     = mysql_host, \
+                        mysql_db       = mysql_db, \
+                        mysql_user     = mysql_user, \
+                        mysql_password = mysql_password, \
+                        mysql_query    = ddl, \
+                        quiet          = quiet, \
+                        debug          = debug)
 
   # set mysql_table to mysql_table_name if not specified
   if (not mysql_table):
     mysql_table = mysql_table_name
-    
+
   if (mysql_truncate_table.strip().lower() == 'y'):
     execute_mysql_query(mysql_host=mysql_host, mysql_db=mysql_db, \
+                        mysql_user=mysql_user, mysql_password=mysql_password, \
                         mysql_query="TRUNCATE TABLE %s.%s" % (mysql_db, mysql_table), \
-                        debug=debug)
+                        quiet = quiet, debug=debug)
 
   # check table row count
   mysql_query = "select count(*) from %s.%s;" % (mysql_db, mysql_table)
 
-  (affected_rows, number_rows) = execute_mysql_query(mysql_host=mysql_host, mysql_db=mysql_db, mysql_query=mysql_query, row_count='Y', debug=debug)
+  (affected_rows, number_rows) = execute_mysql_query(mysql_host=mysql_host, mysql_db=mysql_db, \
+                                                     mysql_user=mysql_user, mysql_password=mysql_password, \
+                                                     mysql_query=mysql_query, row_count='Y', \
+                                                     quiet = quiet, debug=debug)
   table_count_before_load = number_rows
-  
+
   # load csv into mysql table
-  csv_to_mysql_table(mysql_host=mysql_host, mysql_db=mysql_db, mysql_table=mysql_table, \
+  csv_to_mysql_table(mysql_host=mysql_host, mysql_db=mysql_db, mysql_user=mysql_user, \
+                     mysql_password=mysql_password, mysql_table=mysql_table, \
                      csv_file=csv_file, csv_header=csv_header, csv_delimiter=csv_delimiter, \
-                     csv_optionally_enclosed_by=csv_optionally_enclosed_by, debug=debug)
+                     csv_optionally_enclosed_by=csv_optionally_enclosed_by, \
+                     quiet = quiet, debug=debug)
 
 
-  (affected_rows, number_rows) = execute_mysql_query(mysql_host=mysql_host, mysql_db=mysql_db, mysql_query=mysql_query, row_count='Y', debug=debug)
+  (affected_rows, number_rows) = execute_mysql_query(mysql_host=mysql_host, mysql_db=mysql_db, \
+                                                     mysql_user=mysql_user, mysql_password=mysql_password, \
+                                                     mysql_query=mysql_query, row_count='Y', \
+                                                     quiet = quiet, debug=debug)
   table_count_after_load = number_rows
   # delta: diff between table count before load and after load
-  number_rows = int(table_count_after_load) - int(table_count_before_load) 
-  print "[INFO] mysql table [%s]:[%s].[%s] load count ==>> [%s]"  %  (mysql_host, mysql_db, mysql_table, number_rows)
+  number_rows = int(table_count_after_load) - int(table_count_before_load)
+  legoo.info("MySQL table [%s]:[%s].[%s] load count ==>> [%s]"  %  (mysql_host, mysql_db, mysql_table, number_rows))
 
   # verify the csv line count and table count
   if ( int(num_lines) == int(number_rows) ):
-    print "[INFO] file [%s] successfully loaded to mysql table [%s]:[%s].[%s]"  %  (csv_file, mysql_host, mysql_db, mysql_table)
+    legoo.info("file [%s] successfully loaded to mysql table [%s]:[%s].[%s]"  %  (csv_file, mysql_host, mysql_db, mysql_table))
   else:
+    legoo.error("file [%s] count does not match mysql table [%s]:[%s].[%s] load count"  %  (csv_file, mysql_host, mysql_db, mysql_table))
     raise Exception("[ERROR] file [%s] count does not match mysql table [%s]:[%s].[%s] load count"  %  (csv_file, mysql_host, mysql_db, mysql_table))
-
 
 def csv_to_mysql_table(**kwargs):
   """import csv to existing mysql table in target db (bidbs:bi_staging by default)  with  5 parameters.
@@ -659,30 +727,31 @@ def csv_to_mysql_table(**kwargs):
   -----------------------------------------------------------------------------------------------------
   csv_to_mysql_table(mysql_table='tmp_table', csv_file='/tmp/hive_bi_dim_listing.csv', csv_delimiter='tab')
   -----------------------------------------------------------------------------------------------------
-  |  mysql_host                 = bidbs
-  |  mysql_db                   = bi_staging
-  |  mysql_table                = None
-  |  csv_file                   = None
-  |  csv_delimiter              = tab
-  |  csv_header                 = Y
-  |  csv_optionally_enclosed_by = None
-  |  debug                      = Y
   """
-
+  debug                      = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # pretty print kwargs
   # dictionary initialized with the name=value pairs in the keyword argument list
   mysql_host                 = kwargs.pop("mysql_host", "bidbs")
   mysql_db                   = kwargs.pop("mysql_db", "bi_staging")
+  mysql_user                 = kwargs.pop("mysql_user", None)
+  mysql_password             = kwargs.pop("mysql_password", None)
   mysql_table                = kwargs.pop("mysql_table", None)
   csv_file                   = kwargs.pop("csv_file", None)
   csv_delimiter              = kwargs.pop("csv_delimiter", 'tab')            # default to tab csv_delimiter
   csv_header                 = kwargs.pop("csv_header", "Y")
   csv_optionally_enclosed_by = kwargs.pop("csv_optionally_enclosed_by", None)
-  debug                      = kwargs.pop("debug", 'N')
+  quiet                      = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
-    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
+    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))       # raise error and exit
 
+  # run mysql dml
   if (not mysql_table):
-    print "need to specify mysql_table"
+    legoo.error("need to specify mysql_table")
+    raise TypeError("need to specify mysql_table")
 
   # add quote to csv_delimiter
   if (csv_delimiter.strip().lower() == 'tab'):
@@ -694,7 +763,6 @@ def csv_to_mysql_table(**kwargs):
   else:
     enclosed_by = ''
 
-  
   if (csv_header.strip().lower() == 'n'):
     ignore_line = ''
   else:
@@ -705,29 +773,46 @@ def csv_to_mysql_table(**kwargs):
   INTO TABLE %s
   FIELDS TERMINATED BY '%s'  %s  %s""" % (csv_file, mysql_table, csv_delimiter, enclosed_by, ignore_line)
 
-  # run mysql dml
-  execute_mysql_query(mysql_host=mysql_host, mysql_db=mysql_db, \
-                        mysql_query=mysql_dml, debug=debug)
+  # adhocdb/adhocmaildb cant LOAD DATA using MySQLDB client. it is possible due to older version of  MySQL Server
+  # fall back to less preferred system command
+  if (mysql_host not in trulia_mysql_host): # adhocdb use a non-standard password and db
+    mysql_cmd = 'mysql -h%s -u%s -p%s %s -e "%s"' % \
+                ( mysql_host, mysql_user, mysql_password, mysql_db, mysql_dml)
+    legoo.info("running MySQL command: [%s]" % (mysql_cmd))
+    os.system( mysql_cmd )
+  else:
+    execute_mysql_query(mysql_host=mysql_host, mysql_db=mysql_db, \
+                        mysql_user=mysql_user, mysql_password=mysql_password, \
+                        mysql_query=mysql_dml, \
+                        quiet = quiet, debug=debug)
 
 def execute_remote_hive_query(**kwargs):
   """execute hive query on remote hive node
   -------------------------------------------------------
   execute_remote_hive_query(hive_query='desc top50_ip;')
   -------------------------------------------------------
-  |  hive_node  = namenode1
-  |  hive_port  = 10000
-  |  hive_db    = bi
-  |  hive_query = None
-  |  debug      = N
   """
+  debug     = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # pretty print kwargs
   # dictionary initialized with the name=value pairs in the keyword argument list
-  hive_node  = kwargs.pop("hive_node", "namenode1")
-  hive_port  = kwargs.pop("hive_port", 10000)
-  hive_db    = kwargs.pop("hive_db", "staging")
-  hive_query = kwargs.pop("hive_query", None)
-  debug      = kwargs.pop("debug", "Y")
+  hive_node           = kwargs.pop("hive_node", "namenode2s")
+  hive_port           = kwargs.pop("hive_port", 10000)
+  hive_db             = kwargs.pop("hive_db", "staging")
+  hive_query          = kwargs.pop("hive_query", None)
+  mapred_job_priority = kwargs.pop("mapred_job_priority", "NORMAL")
+  quiet              = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
-    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
+    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))       # raise error and exit
+  # check and set default value for mapred_job_priority
+  if (mapred_job_priority.strip().upper() in ["VERY_HIGH", "HIGH", "NORMAL", "LOW", "VERY_LOW"]):
+    mapred_job_priority = mapred_job_priority.strip().upper()
+  else:
+    legoo.warning("option mapred_job_priority [%s] must in list [VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW]. default to NORMAL." % (mapred_job_priority))
+    mapred_job_priority = "NORMAL"
 
   from hive_service import ThriftHive
   from hive_service.ttypes import HiveServerException
@@ -740,40 +825,36 @@ def execute_remote_hive_query(**kwargs):
   hive_query_with_quote = '\"use %s; %s\"' % (hive_db, hive_query)
   # print hive_query_with_quote
   hive_cmd = 'ssh %s hive -e %s' % (hive_node, hive_query_with_quote)
-  print "[INFO] running hive query on [%s]:[%s] ==>> [%s]" % (hive_node, hive_db, hive_query)
+  legoo.info("running hive query on [%s]:[%s] ==>> [%s]" % (hive_node, hive_db, hive_query))
   # rc = subprocess.call(['ssh', hive_node, 'hive', '-e', hive_query_with_quote])
   result_set = [0]
-  
+
   try:
     transport = TSocket.TSocket(hive_node, hive_port)
-    #transport = TSocket.TSocket(hive_node)
     transport = TTransport.TBufferedTransport(transport)
     protocol = TBinaryProtocol.TBinaryProtocol(transport)
     client = ThriftHive.Client(protocol)
     transport.open()
     client.execute("use %s" % (hive_db))
+    client.execute("set mapred.job.priority=%s" % (mapred_job_priority))
     client.execute(hive_query)
     # client.execute("desc dim_listing")
     # client.execute("select * from dim_listing limit 10")
     result_set = client.fetchAll()
     transport.close()
-    return result_set 
+    return result_set
   except Thrift.TException, tx:
-    raise Exception('[ERROR] %s' % (tx.message)) 
+    raise Exception('[ERROR] %s' % (tx.message))
 
 def execute_mysql_query(**kwargs):
   """return tuple (rows_affected, number_of_rows) after execute mysql query on target db (bidbs:bi_staging by default).
   -------------------------------------------------------------------------------------------------
   execute_mysql_query(mysql_host='bidbs', mysql_db='bi_staging', mysql_query='select current_date')
   -------------------------------------------------------------------------------------------------
-  |  mysql_query     = None
-  |  mysql_host      = bidbs
-  |  mysql_db        = bi_staging
-  |  mysql_user      = None
-  |  mysql_password  = None
-  |  row_count       = N
-  |  debug           = N
   """
+  debug           = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # pretty print kwargs
   # dictionary initialized with the name=value pairs in the keyword argument list
   mysql_ini       = kwargs.pop("mysql_ini", "mysql.ini")
   mysql_host      = kwargs.pop("mysql_host", "bidbs")
@@ -782,36 +863,39 @@ def execute_mysql_query(**kwargs):
   mysql_password  = kwargs.pop("mysql_password", None)
   mysql_query     = kwargs.pop("mysql_query", None)
   row_count       = kwargs.pop("row_count", "N")
-  debug           = kwargs.pop("debug", "N")
+  quiet              = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
-    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
-
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
+    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))       # raise error and exit
   number_of_rows = rows_affected = 0 # set default value
-  print "[INFO] running mysql query on [%s]:[%s] ==>> [%s]" % (mysql_host, mysql_db, mysql_query)
+  legoo.info("running mysql query on [%s]:[%s] ==>> [%s]" % (mysql_host, mysql_db, mysql_query))
   try:
-    mysql_conn = create_mysql_connection(mysql_ini = mysql_ini, \
-                                          mysql_host=mysql_host, \
-                                          mysql_db = mysql_db, \
-                                          mysql_user = mysql_user, \
-                                          mysql_password = mysql_password \
-                                          )
+    mysql_conn = create_mysql_connection(mysql_ini      = mysql_ini, \
+                                         mysql_host     = mysql_host, \
+                                         mysql_db       = mysql_db, \
+                                         mysql_user     = mysql_user, \
+                                         mysql_password = mysql_password, \
+                                         quiet          = quiet, \
+                                         debug          = debug \
+                                         )
     cursor = mysql_conn.cursor()
     rows_affected = cursor.execute(mysql_query)
     if (row_count.strip().lower() == 'y'):
       (number_of_rows,)=cursor.fetchone() # used for counts
 
     if (debug.strip().lower() == 'y'):
-      print '[INFO] [%s] rows affected by query [%s].' % (rows_affected, mysql_query)
-      print '[INFO] [%s] number of rows returned by query [%s].' % (number_of_rows, mysql_query)
+      legoo.info('[%s] rows affected by query [%s].' % (rows_affected, mysql_query))
+      legoo.info('[INFO] [%s] number of rows returned by query [%s].' % (number_of_rows, mysql_query))
     return  (rows_affected, number_of_rows)
   except MySQLdb.Error as e:
-    # print '[ERROR] [%s] failed on [%s].[%s]' % ( mysql_query, mysql_host, mysql_db)
-    # print "[ERROR] %d: %s" % (e.args[0], e.args[1])
-    raise 
+    legoo.info('[ERROR] [%s] failed on [%s].[%s]' % ( mysql_query, mysql_host, mysql_db))
+    legoo.info("[ERROR] %d: %s" % (e.args[0], e.args[1]))
+    raise
   finally:
     cursor.close()
     mysql_conn.close()
-
 
 def create_mysql_connection(**kwargs):
   """return myql connection object based on configurations in mysql_ini. For security reason,
@@ -819,23 +903,22 @@ def create_mysql_connection(**kwargs):
   -------------------------------------------------------------------------------------------
   create_mysql_connection(mysql_host='bidbs', mysql_db='bi_staging', debug='N')
   -------------------------------------------------------------------------------------------
-  |  mysql_ini      = mysql.ini
-  |  mysql_host     = bidbs
-  |  mysql_db       = bi_staging
-  |  mysql_user     = root
-  |  mysql_password = root_password
-  |  debug          = N
   """
+  debug     = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # pretty print kwargs
   # dictionary initialized with the name=value pairs in the keyword argument list
   mysql_ini       = kwargs.pop("mysql_ini", "mysql.ini")
   mysql_host      = kwargs.pop("mysql_host", "bidbs")
   mysql_db        = kwargs.pop("mysql_db", "bi_staging")
   mysql_user      = kwargs.pop("mysql_user", None)
   mysql_password  = kwargs.pop("mysql_password", None)
-  debug           = kwargs.pop("debug", "N")
+  quiet              = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
-    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
-
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
+    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))       # raise error and exit
   # parse the ini file to pull db variables
   config = ConfigParser.ConfigParser()
   # find mysql_ini in the same directory as script
@@ -844,14 +927,14 @@ def create_mysql_connection(**kwargs):
   # extend e mysql.ini if necessary
   # set default mysql_user from mysql_ini
   if (not mysql_user):
-    if (mysql_host in ('adhocdb')): # adhocdb use a non-standard password and db.
+    if (mysql_host not in trulia_mysql_host): # adhocdb use a non-standard password and db.
       mysql_user = config.get(mysql_host, "user")
     else:
       mysql_user = config.get('default', "user")
 
   # set default mysql_password from mysql_ini
   if (not mysql_password):
-    if (mysql_host in ('adhocdb')): # adhocdb use a non-standard password and db.
+    if (mysql_host not in trulia_mysql_host): # adhocdb use a non-standard password and db.
       mysql_password = config.get(mysql_host, "password")
     else:
       mysql_password = config.get('default', "password")
@@ -864,35 +947,33 @@ def create_mysql_connection(**kwargs):
     cursor = mysql_conn.cursor()
     cursor.execute("SELECT CURRENT_DATE()")
     data = cursor.fetchone()    # fetch a single row using fetchone() method.
-    print "FUNCTION STARTS: [ %s ] >>>>>>" % (sys._getframe().f_code.co_name)
-    print "script                => %s" % (os.path.abspath(__file__))
-    print "mysql_ini             => %s/%s" %(os.getcwd(), mysql_ini)
-    print "host:db               => %s:%s" % (host, mysql_db)
-    print "SELECT CURRENT_DATE() => %s" % (data)
-    print "FUNCTION ENDS  <<<<<<\n"
+    legoo.info("FUNCTION STARTS: [ %s ] >>>>>>" % (sys._getframe().f_code.co_name))
+    legoo.info("script                => %s" % (os.path.abspath(__file__)))
+    legoo.info("mysql_ini             => %s/%s" %(os.getcwd(), mysql_ini))
+    legoo.info("host:db               => %s:%s" % (host, mysql_db))
+    legoo.info("SELECT CURRENT_DATE() => %s" % (data))
+    legoo.info("FUNCTION ENDS  <<<<<<\n")
     cursor.close()
   return mysql_conn
 
 def create_mysql_ddl_from_csv(**kwargs):
   """return table name, mysql table ddl based on csv header. by default, scan the whole file to detect column length.
-  |  csv_file           = None
-  |  csv_delimiter      = tab
-  |  table_name         = csv_file_name
-  |  max_rows           = None
-  |  mysql_create_table = N
-  |  debug              = N
   """
-
+  debug     = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # pretty print kwargs
   # dictionary initialized with the name=value pairs in the keyword argument list
   csv_file           = kwargs.pop("csv_file", None)
   csv_delimiter      = kwargs.pop("csv_delimiter", 'tab') # default to tab
   table_name         = kwargs.pop("table_name", None)
   max_rows           = kwargs.pop("max_rows", None)
   mysql_create_table = kwargs.pop("mysql_create_table", "N")
-  debug              = kwargs.pop("debug", "N")
+  quiet              = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
-    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
-
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
+    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))       # raise error and exit
   # initilize variables
   csv.field_size_limit(sys.maxsize)        # override default size 131072
   column_len = {}                          # dictionary for column and length
@@ -948,8 +1029,8 @@ def create_mysql_ddl_from_csv(**kwargs):
     else: # last column
       ddl += fn.ljust(max_column_name_len) + data_type + '(' + str(column_len[fn]) + ') \n);'
   if (debug.strip().upper() == 'Y'):
-    print '[INFO] [%s] => scanned %d rows to calculate the max column length. \n' % (csv_file, i)
-    print ''.ljust(50, '='), '\n',  ddl, '\n', ''.ljust(50, '=')
+    legoo.info('[INFO] [%s] => scanned %d rows to calculate the max column length. \n' % (csv_file, i))
+    legoo.info(''.ljust(50, '='), '\n',  ddl, '\n', ''.ljust(50, '='))
   return (table_name, ddl)
 
 def create_hive_ddl_from_csv(**kwargs):
@@ -957,19 +1038,21 @@ def create_hive_ddl_from_csv(**kwargs):
   ------------------------------------------------------------------------------------------------------------------
   (table_name, hive_ddl)=create_hive_ddl_from_csv(csv_file='/tmp/fact_imp_pdp.csv', csv_delimiter='tab')
   ------------------------------------------------------------------------------------------------------------------
-  |  csv_file       = None
-  |  csv_delimiter  = tab
-  |  table_name     = csv_file
-  |  debug          = N
   """
-
+  debug     = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # pretty print kwargs
   # dictionary initialized with the name=value pairs in the keyword argument list
   csv_file   = kwargs.pop("csv_file", None)
   csv_delimiter  = kwargs.pop("csv_delimiter", 'tab') # default to tab
   table_name = kwargs.pop("table_name", None)
-  debug      = kwargs.pop("debug", "N")
+  quiet              = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
-    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
+    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))       # raise error and exit
+
   # set default arguments
   if (not table_name): # set default table name from file name
     # get the base file name then split to filename and extension
@@ -982,7 +1065,7 @@ def create_hive_ddl_from_csv(**kwargs):
   elif (csv_delimiter.strip() == ','):
     hive_csv_delimiter = '\\054'
   # initialize variables
-  hive_keywords = ['location', 'date']
+  hive_keywords = ['location', 'date', 'format']
 
   # scan csv file up to max_rows to find the max column length
   with open(csv_file, "rb") as csv_file_new:
@@ -1014,11 +1097,6 @@ def csv_dump(**kwargs):
   --------------------------------------------------------------------
   csv_dump(csv_file='/tmp/fact_imp_pdp.csv', csv_delimiter='tab', lines=5)
   --------------------------------------------------------------------
-  |  csv_file        = None
-  |  csv_delimiter   = tab
-  |  lines           = 10
-  |  line_number     = 2
-  |  debug           = N
   """
   # print kwargs
   # dictionary initialized with the name=value pairs in the keyword argument list
@@ -1067,6 +1145,216 @@ def csv_dump(**kwargs):
       if (int(i) == min(int(lines), 100)):
         break
 
+def wait_for_table(**kwargs):
+  """check if table exists, and updated after [mysql_table_update_after]
+  if not, retry based on [sleep_interval], [num_retry] and/or [stop_at]
+  NOTE:
+  1. need access to INFORMATION_SCHEMA.TABLES to retrieve update_time
+  2. option [STOP_AT] i.e. [2013-10-08 15:30], together with [mysql_table_update_after]
+     i.e. [2013-10-09 14:25], define the table wait window
+  3. option [ETL_TABLE] and [ETL_JOB] are trulia specific which retrive table last update
+     from proprietary [AUDIT_JOB] database
+  """
+  TABLE_FOUND = False # init variable to False
+  i = 0              # init counter
+
+  debug                        = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # print kwargs
+  # dictionary initialized with the name=value pairs in the keyword argument list
+  mysql_ini                    = kwargs.pop("mysql_ini", "mysql.ini")
+  mysql_host                   = kwargs.pop("mysql_host", None)
+  mysql_db                     = kwargs.pop("mysql_db", None)
+  mysql_user                   = kwargs.pop("mysql_user", None)
+  mysql_password               = kwargs.pop("mysql_password", None)
+  mysql_table                  = kwargs.pop("mysql_table", None)
+  etl_table                    = kwargs.pop("etl_table", None)
+  etl_job                      = kwargs.pop("etl_job", None)
+  mysql_table_update_after     = kwargs.pop("mysql_table_update_after", None)
+  sleep_interval               = kwargs.pop("sleep_interval", 60)
+  num_retry                    = kwargs.pop("num_retry", None)
+  stop_at                      = kwargs.pop("stop_at", None)   # [hh:mm] i.e. "14:30"
+  quiet                        = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)   # suppress logging if variable quiet set to Y
+  if kwargs:
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
+    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))       # raise error and exit
+
+  if ( not mysql_table and not etl_table and not etl_job ):
+    legoo.error("Must specify one of options of [MYSQL_TABLE], [ETL_TABLE], and [ETL_JOB] ... ")      # log error
+    raise TypeError("Must specify one of options of [MYSQL_TABLE], [ETL_TABLE], and [ETL_JOB] ... ")  # raise error and exit
+
+  if ( num_retry ):
+    num_retry          = int(str(num_retry).strip().lower()) # format and convert to int
+    if ( num_retry < 1) :
+      legoo.error("invalid value [%s] for [num_retry]. try again with positive integer ... " % (num_retry)) # log error
+      raise ValueError("invalid value [%s] for [num_retry]. try again with positive integer ... " \
+                       % (num_retry)) # raise error and exit
+  else:
+    num_retry = 0  # default to 0 if not specified
+
+  sleep_interval     = int(str(sleep_interval).strip().lower()) # format and convert to int
+  if ( sleep_interval < 1) :
+    legoo.error("invalid value [%s] for [sleep_interval]. try again with positive integer ... " \
+                % (sleep_interval))      # log error
+    raise ValueError("invalid value [%s] for [sleep_interval]. try again with positive integer ... " \
+                     % (sleep_interval)) # raise error and exit
+
+  if ( (not stop_at) and (not num_retry)):
+    legoo.error("option stop_at and num_retry not set. must specify one ... ")      # log error
+    raise TypeError("option stop_at and num_retry not set. must specify one ...")   # raise error and exit
+
+  # create datetime object stop_at i.e. "14:30" if specified
+  if ( stop_at ):
+    stop_at_dt = datetime.datetime.strptime(stop_at, '%Y-%m-%d %H:%M')
+  else:
+    stop_at_dt = datetime.datetime.now()
+
+  if ( num_retry ):
+    num_retry          = int(str(num_retry).strip().lower()) # format and convert to int
+    if ( num_retry < 1) :
+      legoo.error("invalid value [%s] for [num_retry]. try again with positive integer ... " % (num_retry)) # log error
+      raise ValueError("invalid value [%s] for [num_retry]. try again with positive integer ... " \
+                       % (num_retry)) # raise error and exit
+  else:
+    num_retry = 0  # default to 0 if not specified
+
+  # build query depending options of [MYSQL_TABLE], [ETL_TABLE], and [ETL_JOB]
+  if (mysql_table):
+    mysql_query = """SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+                     WHERE table_name = '%s'
+                     AND update_time >= '%s'
+                     """ % ( mysql_table, mysql_table_update_after)
+  elif (etl_table):
+    mysql_query = """SELECT COUNT(*)
+                     FROM audit.audit_job_detail ajd, audit.audit_job aj
+                     WHERE ajd.job_id = aj.job_id
+                     AND LOWER(Task_Target_Table) = '%s'
+                     AND Task_End_Time > '%s'
+                     AND LOWER(job_success_flag) = 'y'
+                     AND LOWER(job_qa_success_flag) = 'y'
+                     """ % ( etl_table, mysql_table_update_after)
+  elif (etl_job):
+    mysql_query = """SELECT COUNT(*)
+                     FROM audit.audit_job
+                     WHERE LOWER(job_name) LIKE '%s'
+                     AND LOWER(job_success_flag) = 'y'
+                     AND job_end_time >= '%s'
+                     """ % ( etl_job, mysql_table_update_after)
+
+  # variable for logging
+  target = ''.join(filter(None, (mysql_table, etl_table,  etl_job)))
+  # greedy algorithm: when stop_at and num_retry both set, progam continues either stop_at or num_retry satisfies
+  while ( (datetime.datetime.now() < stop_at_dt) or (i < num_retry) ):
+    (affected_rows, number_rows) = execute_mysql_query(mysql_ini=mysql_ini, mysql_host=mysql_host, mysql_db=mysql_db, \
+                                                       mysql_user=mysql_user, mysql_password=mysql_password, \
+                                                       mysql_query=mysql_query, row_count='Y', debug=debug)
+    if (int(number_rows) > 0):
+      TABLE_FOUND = True # set flag to true if table exists
+      legoo.info("table [%s] is ready" % (target))
+      break
+    else:
+      legoo.info("check #[%d] if table [%s] is ready" % (i, target))
+      sleep(sleep_interval)
+    i += 1
+    if (debug.strip().lower() == 'y'):
+      print i, "=>>",  num_retry, '    ',  datetime.datetime.now(),  "=>>", stop_at_dt
+
+  if (not TABLE_FOUND):
+    legoo.error("table [%s] is NOT ready" % (target))           # log error
+    raise TypeError("table [%s] is NOT ready" % (target))       # raise error and exit
+
+def wait_for_file(**kwargs):
+  """check if file exists or newer, otherwise, wait and retry
+  ---------------------------------------------------------
+  wait_for_file(num_retry = 10, sleep_interval=60, file = 'test')
+  ---------------------------------------------------------
+  """
+  debug              = kwargs.pop("debug", "N")
+  # print kwargs
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)
+  stop_at            = kwargs.pop("stop_at", None)  # [yyyy-mm-dd mmhh:mm] i.e. "2013-10-08 14:30"
+  mtime_after        = kwargs.pop("mtime_after", None)    # [yyyy-mm-dd mmhh:mm] i.e. "2013-10-08 14:30"
+  # dictionary initialized with the name=value pairs in the keyword argument list
+  num_retry          = kwargs.pop("num_retry", None)
+  sleep_interval     = kwargs.pop("sleep_interval", 60)
+  sleep_interval     = int(str(sleep_interval).strip().lower()) # format and convert to int
+  if ( sleep_interval < 1) :
+    legoo.error("invalid value [%s] for [sleep_interval]. try again with positive integer ... " \
+                % (sleep_interval))      # log error
+    raise ValueError("invalid value [%s] for [sleep_interval]. try again with positive integer ... " \
+                     % (sleep_interval)) # raise error and exit
+  file               = kwargs.pop("file", None)
+  if ( not file ):
+    legoo.error("option file not set. must specify file ... ")      # log error
+    raise TypeError("option file not set. must specify file ... ")   # raise error and exit
+
+  quiet              = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
+  if kwargs:
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
+    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))       # raise error and exit
+
+  FILE_FOUND = False # init variable to False
+  i = 0              # init counter
+
+  if ( (not stop_at) and (not num_retry)):
+    legoo.error("option stop_at and num_retry not set. must specify one ... ")      # log error
+    raise TypeError("option stop_at and num_retry not set. must specify one ...")   # raise error and exit
+
+  if ( stop_at ):
+    stop_at_dt = datetime.datetime.strptime(stop_at, '%Y-%m-%d %H:%M')
+  else:
+    stop_at_dt = datetime.datetime.now()
+
+  if ( mtime_after ):
+    mtime_after_dt = datetime.datetime.strptime(mtime_after, '%Y-%m-%d %H:%M')
+  else:
+    mtime_after_dt = datetime.datetime.fromtimestamp(0) # set default
+
+  if ( num_retry ):
+    num_retry          = int(str(num_retry).strip().lower()) # format and convert to int
+    if ( num_retry < 1) :
+      legoo.error("invalid value [%s] for [num_retry]. try again with positive integer ... " % (num_retry)) # log error
+      raise ValueError("invalid value [%s] for [num_retry]. try again with positive integer ... " \
+                       % (num_retry)) # raise error and exit
+  else:
+    num_retry = 0  # default to 0 if not specified
+
+  # greedy algorithm: when stop_at and num_retry both set, progam continues either stop_at or num_retry satisfies
+  while ( (datetime.datetime.now() < stop_at_dt) or (i < num_retry) ):
+    if (os.path.isfile( file )):
+      # check if file stopped being written
+      prv_size = os.path.getsize( file )
+      sleep(10) # wait 30 seconds then check the file size again
+      post_size = os.path.getsize( file )
+
+      # get file ctime
+      modify_dt    = datetime.datetime.fromtimestamp(os.path.getmtime(file))
+      # check file 1) stop grower 2) modified after mtime_after
+      if ( int(prv_size) == int(post_size) and (modify_dt >= mtime_after_dt)):
+        FILE_FOUND = True # set flag to true if file exists
+        legoo.info("file [%s] found" % (file))
+        break
+      elif (int(prv_size) <> int(post_size)):
+        legoo.info("check #[%d] file [%s] exits but still being written. try again in [%s] seconds..." \
+                   % (i, file, sleep_interval))
+      elif (modify_dt < mtime_after_dt):
+        legoo.info("check #[%d] file [%s] exits but modify_time [%s] before mtime_after [%s]. try again in [%s] seconds..." \
+                   % (i, file,  modify_dt, mtime_after_dt, sleep_interval))
+
+    else:
+      legoo.info("check #[%d] if file [%s] exits" % (i,  file))
+      sleep(sleep_interval)
+    i += 1
+
+  if (not FILE_FOUND):
+    legoo.error("file [%s] not exits" % (file))           # log error
+    raise TypeError("file [%s] not exits" % (file))       # raise error and exit
+
 def dos_to_unix( orig_file, new_file=None):
   """call shell utility dos_to_unix to convert file format from dos to unix
   -------------------------------------------------------------------------
@@ -1085,7 +1373,7 @@ def main():
   # (table_name, mysql_ddl) = create_mysql_ddl_from_csv(csv_file="/tmp/dim_listing_delta.csv", csv_delimiter = 'tab', mysql_create_table = 'Y', max_rows=60000)
   # csv_to_mysql(csv_file="/tmp/dim_listing_delta.csv", csv_delimiter='tab', mysql_create_table='Y')
   # execute_mysql_query(mysql_host='bidbs', mysql_db='bi', mysql_query='select count(*) from dim_property2', row_count='Y')
-  # hive_to_csv(csv_file='/tmp/dim_listing.csv',hive_query='select * from bi.fact_imp_pdp limit 1100000',debug='Y')
+  # hive_to_csv(csv_file='dim_listing.csv',hive_node='namenode2s', hive_query='select * from bi.dim_listing limit 1000000', mapred_job_priority = 'HIGH', debug='Y')
   # hive_to_mysql(hive_table='fact_imp_pdp', hive_query='select * from bi.fact_imp_pdp limit 2000000', create_table = 'Y')
   # create_mysql_connection(mysql_host='bidbs', mysql_db='bi_staging', debug='Y')
   # (affected_rows, number_rows) = execute_mysql_query(mysql_host='bidbs', mysql_db='bi', mysql_query='select count(*) from dim_property', row_count='Y')
@@ -1099,16 +1387,21 @@ def main():
   # mysql_to_csv(mysql_host='bidbs', mysql_db='bi_staging', mysql_table='userstatsreport', mysql_query='select * from userstatsreport limit 1000;')
   # mysql_to_hive(mysql_host='bidbs', mysql_db='bi_staging', mysql_table='userstatsreport', mysql_query='select * from userstatsreport;',  hive_create_table='Y')
   # hive_to_mysql(hive_table='userstatsreport', hive_db='staging', mysql_db='bi_staging', mysql_table='userstatsreport_hive',  mysql_create_table='Y', max_rows=1000000)
-  # count_lines(file='/tmp/msa.csv', skip_header='Y')
+  # count_lines(file='test/census_population.csv', skip_header='N', quiet='N', debug='N')
   #rs = execute_remote_hive_query(hive_db='bi', hive_query="desc dim_listing")
   # print rs
-  # rows = count_hive_table_rows(hive_node='namenode1', hive_db='bi', hive_table='dim_listing')
+  # rows = count_hive_table_rows(hive_node='namenode2s', hive_db='staging', hive_table='top50_ip', quiet='Y')
   # print rows
   # csv_to_hive_table(csv_file='/tmp/fact_property_view.csv', hive_db='staging', hive_table='fact_property_view_partition', hive_partition="date_int = 20130428")
   # csv_to_hive(csv_file='/tmp/fact_property_view.csv', hive_db='staging', hive_create_table='Y')
-  # csv_to_hive(csv_file='/tmp/fact_property_view.csv', hive_db='staging', hive_table='Y')
-  # csv_to_hive(csv_file='/tmp/fact_property_view.csv', hive_db='staging', hive_table='fact_property_view_partition', hive_partition="date_int=20130428")
-  # remove_file(file='/tmp/dim_user_tier_2.csv2')
+  # csv_to_hive(csv_file='/data/tmp/dim_listing.csv', hive_db='staging', hive_table='Y', hive_node='namenode2s', mapred_job_priority = 'HIGH', hive_create_table='Y')
+  # csv_to_hive(csv_file='/data/tmp/dim_listing.csv', hive_db='staging', hive_table='Y', hive_node='namenode2s',)
+  # csv_to_hive(csv_file='/data/tmp/dim_listing.csv', hive_db='staging', hive_table='fact_property_view_partition', hive_partition="date_int=20130428", hive_create_table='Y')
+  # remove_file(file='/tmp/dim_user_tier_2.csv2', debug='Y', quiet='Y')
+  # rs = execute_remote_hive_query(hive_node='namenode2s', hive_db='bi', mapred_job_priority="very_high_invalid", hive_query="select count(*) from dim_listing"
+  # wait_for_table(mysql_host='bidbs', mysql_db='bi', mysql_table='dim_property', \
+  #               mysql_table_update_after = '2013-10-09 03:00', \
+  #              sleep_interval = 30, num_retry = 6, stop_at = '12:46', debug='Y', quiet='Y')
   pass
 
 if __name__ == '__main__':

@@ -24,6 +24,8 @@ def main():
                     help="OPTIONAL: CREATE_TABLE flag for hive table DDL. default: [Y]", default='N')
   parser.add_option("--hive_overwrite", dest="hive_overwrite",
                     help="OPTIONAL: OVERWRITE flag for hive table loading. default: [Y]", default='Y')
+  parser.add_option("--mapred_job_priority", dest="mapred_job_priority",
+                    help="OPTIONAL: map reduce job priority [VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW]",  default='NORMAL')
   parser.add_option("--csv_header", dest="csv_header",
                     help="OPTIONAL: csv_header flag csv file default: [Y]", default='Y')
 
@@ -35,17 +37,18 @@ def main():
 
   for csv_file in args:
       legoo.csv_to_hive(  hive_node              = options.hive_node, \
-                        hive_port              = options.hive_port, \
-                        hive_db                = options.hive_db, \
-                        hive_create_table      = options.hive_create_table, \
-                        hive_table             = options.hive_table, \
-                        hive_partition         = options.hive_partition, \
-                        hive_overwrite         = options.hive_overwrite, \
-                        csv_file               = csv_file, \
-                        csv_header             = options.csv_header, \
-                        csv_delimiter          = options.csv_delimiter, \
-                        remove_carriage_return = options.remove_carriage_return, \
-                        debug                  = options.debug
+                          hive_port              = options.hive_port, \
+                          hive_db                = options.hive_db, \
+                          hive_create_table      = options.hive_create_table, \
+                          hive_table             = options.hive_table, \
+                          hive_partition         = options.hive_partition, \
+                          hive_overwrite         = options.hive_overwrite, \
+                          mapred_job_priority    = options.mapred_job_priority, \
+                          csv_file               = csv_file, \
+                          csv_header             = options.csv_header, \
+                          csv_delimiter          = options.csv_delimiter, \
+                          remove_carriage_return = options.remove_carriage_return, \
+                          debug                  = options.debug
                     )
   # pass
 

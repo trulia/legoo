@@ -1,0 +1,47 @@
+#!/usr/bin/python
+
+# pluo, Apr 1, 2013
+# PATH=$PATH:/home/dataproc/bi/lib/python # add python lib to path
+# execute_hive_query --hive_query='desc opportunity'
+# execute_hive_query --hive_query='select count(*) from opportunity'
+# execute_hive_query --hive_query='drop table if exists tmp_fpv'
+
+import legoo
+import sys
+from optparse import OptionParser
+
+def main():
+  parser = OptionParser()
+  parser.add_option("--hive_node", dest="hive_node",
+                    help="OPTIONAL: target hive node. default: [namenode1]", default='namenode1')
+  parser.add_option("--hive_port", dest="hive_port",
+                    help="OPTIONAL: target hive port number. default: 10000", default='10000')
+  parser.add_option("--hive_db", dest="hive_db",
+                    help="OPTIONAL: target hive db. default: [staging]", default='staging')
+  parser.add_option("--hive_table", dest="hive_table",
+                    help="OPTIONAL: hive table name. default: created from csv file name")
+  parser.add_option("--hive_query", dest="hive_query", help="OPTIONAL: hive query")
+  parser.add_option("--mapred_job_priority", dest="mapred_job_priority",
+                    help="OPTIONAL: map reduce job priority [VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW]",  default='NORMAL')
+  parser.add_option("-q", "--quiet", "--silent",  dest="quiet",
+                    help="OPTIONAL: suppress messages to stdout. default: [N]", default='N')
+  parser.add_option("-d", "--debug", dest="debug", help="OPTIONAL: debug flag [Y|N], default: [N]", default='N')
+  (options, args) = parser.parse_args()
+
+
+
+  rs = legoo.execute_remote_hive_query(  hive_node           = options.hive_node, \
+                                         hive_port           = options.hive_port, \
+                                         hive_db             = options.hive_db, \
+                                         hive_query          = options.hive_query, \
+                                         mapred_job_priority = options.mapred_job_priority, \
+                                         quiet               = options.quiet, \
+                                         debug               = options.debug
+                                         )
+  for i in rs:
+    print i
+  # pass
+
+if __name__ == '__main__':
+  main()
+

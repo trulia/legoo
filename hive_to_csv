@@ -30,21 +30,27 @@ def main():
                     help="source hive table name")
   parser.add_option("--hive_query", dest="hive_query",
                     help="Free form query results to be exported")
+  parser.add_option("--mapred_job_priority", dest="mapred_job_priority",
+                  help="OPTIONAL: map reduce job priority [VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW]",  default='NORMAL')
   parser.add_option("--csv_dir", dest="csv_dir",
                     help="dir for tsv", default='/data/tmp/')
   parser.add_option("--csv_file", dest="csv_file",
                     help="export hive [table | query results] to tsv")
-  parser.add_option('--debug', dest="debug",
-                    help="set the debug flag [Y|N], default: [N]")
+  parser.add_option("-q", "--quiet", "--silent",  dest="quiet",
+                    help="OPTIONAL: suppress messages to stdout. default: [N]", default='N')
+  parser.add_option("-d", "--debug", dest="debug", help="OPTIONAL: debug flag [Y|N], default: [N]", default='N')
 
   (options, args) = parser.parse_args()
 
-  legoo.hive_to_csv(hive_node   = options.hive_node, \
-                  hive_db     = options.hive_db, \
-                  hive_table  = options.hive_table, \
-                  hive_query  = options.hive_query, \
-                  csv_dir     = options.csv_dir, \
-                  csv_file    = options.csv_file
+  legoo.hive_to_csv(hive_node           = options.hive_node, \
+                    hive_db             = options.hive_db, \
+                    hive_table          = options.hive_table, \
+                    hive_query          = options.hive_query, \
+                    mapred_job_priority = options.mapred_job_priority, \
+                    csv_dir             = options.csv_dir, \
+                    csv_file            = options.csv_file, \
+                    quiet               = options.quiet, \
+                    debug               = options.debug
                   )
 
 if __name__ == '__main__':
