@@ -11,9 +11,9 @@ Let me start with `MySQL LOAD INFILE` limitations that load `CSV` into `MySQL`. 
 
 To transfer data between `Hadoop`/`Hive` and `MySQL`, [Sqoop](http://sqoop.apache.org) from [Cloudera](http://www.cloudera.com) is the best tool available. However, as of 4/1/2013, the performance did not meet my expectations; It crashed when there is carriage return or hive keywords (i.e. location) in `MySQL DDL`; User can not set the `Hive` cluster dynamically; It can not create `MySQL table` dynamically when export `Hive` table to `MySQL`; Nor support `CSV` to `Hive`; only connect to `Hive` DB `default`; can not specify mapred job priority; the list goes on and on and on and on.
 
-Out of frustration, I built `legoo` during the [trulia](http://www.trulia.com) innovation week!
+Out of frustration and desperation, `legoo` created! 
 
-For ease of programming, I created modules,  which are wrapper scripts with python function call. Here is the high level view of modules. More details covered in [Legoo modules](#legoo-modules).
+for ease of programming, I created modules,  which are wrapper scripts with python function call. Here is the high level view of modules. More details covered in [Legoo modules](#legoo-modules).
 
 ![diagram](https://raw.github.com/trulia/legoo/master/modules.jpg?login=pluo-trulia&token=974a2a8c87eb001d1219ab09e1794b18 "module diagram")
 
