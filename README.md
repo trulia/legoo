@@ -456,7 +456,7 @@ To use `legoo` modules, you specify the module you want to use and the options t
 Next release would have new options like `dry_run`, `escape_hive_keyword`, `config_file` for unit testing, etc. 
 
 ## Contributors
-* Patrick Luo ([emacsornothing@gmail.com]())
+* Patrick Luo ([partick.luo2006@gmail.com]())
 
 ## License
 [Legoo is licensed under the MIT License](https://github.com/trulia/legoo/blob/master/LICENSE.txt)
