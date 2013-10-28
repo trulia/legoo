@@ -221,7 +221,7 @@ To use `legoo` modules, you specify the module you want to use and the options t
       -h, --help                                        show this help message and exit
       --mysql_ini=MYSQL_INI                             mysql initial file for user, password and default db, default: [mysql.ini]
       --mysql_host=MYSQL_HOST                           mysql host for source data, default: [bidbs]
-      --mysql_db=MYSQL_DB         	       	      	mysql database for source data, default: [bi]
+      --mysql_db=MYSQL_DB         	       	      	    mysql database for source data, default: [bi]
       --mysql_user=MYSQL_USER                           OPTIONAL: mysql user, if not specified, get user from mysql_ini
       --mysql_password=MYSQL_PASSWORD                   OPTIONAL: mysql password, if not specified, get password from mysql_ini
       --mysql_quick=MYSQL_QUICK                         OPTIONAL: --quick option for mysql client, default:[N]
