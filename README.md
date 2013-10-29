@@ -28,6 +28,8 @@ for ease of programming, I created modules,  which are wrapper scripts with pyth
     - [hive_to_mysql](#hive_to_mysql)
     - [mysql_to_csv](#mysql_to_csv)
     - [hive_to_csv](#hive_to_csv)
+    - [execute_mysql_query](#execute_mysql_query)
+    - [execute_hive_query](#execute_hive_query)
     - [wait_for_file](#wait_for_file)
     - [wait_for_table](#wait_for_table)
 * [Future Release](#future-release)
@@ -394,6 +396,100 @@ To use `legoo` modules, you specify the module you want to use and the options t
 
     hive_to_csv --hive_node='namenode1' --hive_db='bi' --hive_table='dim_time' --csv_dir='/tmp/' --csv_file='dim_time2.csv'
 
+## `execute_mysql_query`
+`execute_mysql_query` run `mysql query` on remote `MySQL` server and return the results. 
+
+##### `man page`:
+
+    $ execute_mysql_query -h
+    Usage: execute_mysql_query [options]
+
+    Options:
+      -h, --help                           show this help message and exit
+      --mysql_host                         mysql host. default: [namehost1]
+      --mysql_db                           mysql db. default: [staging]
+      --mysql_user                         mysql user, if not specified, get user from mysql_ini
+      --mysql_password                     mysql password, if not specified, get password from mysql_ini
+      --mysql_query=MYSQL_QUERY            mysql query
+      --row_count=ROW_COUNT                OPTIONAL: row_count default: [N]
+      -q --quiet --silent                  OPTIONAL: suppress messages to stdout. default: [N]
+      -d --debug                           OPTIONAL: debug flag [Y|N], default: [N]
+
+##### example: describe table [tmp_visit] on [bidbs].[bi_staging]
+     
+    execute_mysql_query --mysql_host='bidbs' --mysql_db='bi_staging' --mysql_user='root' --mysql_query='desc  tmp_visit'
+    INFO      :[legoo][execute_mysql_query][2013-10-29 10:51:42,850]:running mysql query on [bidbs]:[bi_staging] ==>> [desc  tmp_visit]
+    
+    (('date_key', 'varchar(8)', 'YES', 'MUL', None, ''),
+     ('email_type_id', 'int(11)', 'NO', '', '0', ''),
+     ('visit_www', 'decimal(33,0)', 'YES', '', None, ''),
+     ('visit_mobile', 'decimal(33,0)', 'YES', '', None, ''),
+     ('visit_total', 'decimal(33,0)', 'YES', '', None, ''))
+
+##### example: run table count [select count(*) from tmp_visit] on [bidbs].[bi_staging] and return tuple (rows_affected, number_of_rows)
+
+    execute_mysql_query --mysql_host='bidbs' --mysql_db='bi_staging' --mysql_user='root' --mysql_query='select count(*) from tmp_visit' --row_count='Y'
+    INFO      :[legoo][execute_mysql_query][2013-10-29 10:55:00,346]:running mysql query on [bidbs]:[bi_staging] ==>> [select count(*) from  tmp_visit]
+    1
+    467
+
+
+##### example: drop table [tmp_visit] on [bidbs].[bi_staging]
+ 
+    execute_mysql_query --mysql_host='bidbs' --mysql_db='bi_staging' --mysql_user='root' --mysql_query='drop table if exists tmp_visit'
+
+
+## `execute_hive_query`
+`execute_hive_query` run `hive query` on remote `Hive` server and return the results. 
+
+##### `man page`:
+
+    $ execute_hive_query -h
+    Usage: execute_hive_query [options]
+
+    Options:
+      -h, --help                           show this help message and exit
+      --hive_node                          hive node. default: [namenode2s]
+      --hive_port                          hive port number. default: 10000
+      --hive_db                            hive db. default: [staging]
+      --hive_query                         hive query
+      --mapred_job_priority                OPTIONAL: map reduce job priority [VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW]. default: [NORMAL]
+      -q --quiet --silent                  OPTIONAL: suppress messages to stdout. default: [N]
+      -d --debug                           OPTIONAL: debug flag [Y|N], default: [N]
+      
+##### example: describe hive table [top50_ip] on [namenode2s]:[staging]: 
+     
+    execute_hive_query --hive_node='namenode2s' --hive_db='staging' --hive_query='desc top50_ip'
+    INFO:[legoo][execute_remote_hive_query][2013-10-29 11:35:02,448]:running hive query on [namenode2s]:[staging] ==>> [desc top50_ip]
+    
+    date_key		string	
+    hour		    string	
+    site		    string	
+    ip_addr		    string	
+    domain_info		string	
+    url_part		string	
+    cnt_over_2500	string	
+
+
+##### example: sample hive table [top50_ip] on [namenode2s]:[staging]:
+
+
+    execute_hive_query --hive_node='namenode2s' --hive_db='staging' --hive_query='select * from top50_ip limit 10'
+    INFO      :[legoo][execute_remote_hive_query][2013-10-29 11:35:31,117]:running hive query on [namenode2s]:[staging] ==>> [select * from top50_ip limit 10]
+    
+    20131029	4	api	-	unable to determine	NULL	5712
+    20131029	5	api	-	unable to determine	NULL	5750
+    20131029	6	api	-	unable to determine	NULL	5709
+    20131029	7	api	-	unable to determine	NULL	5748
+    20131029	8	api	-	unable to determine	NULL	5726
+    20131029	8	api	174.234.1.176	176.sub-174-234-1.myvzw.com	tma	2516
+    20131029	4	www	192.254.78.136	NetRange:       192.254.78.128 - 192.254.78.159	blog	3839
+    20131029	5	www	192.254.78.136	NetRange:       192.254.78.128 - 192.254.78.159	blog	3150
+    20131029	6	www	192.254.78.136	NetRange:       192.254.78.128 - 192.254.78.159	blog	3819
+    20131029	7	www	192.254.78.136	NetRange:       192.254.78.128 - 192.254.78.159	blog	3808
+    
+
+      
 ## `wait_for_file`
 `wait_for_file` check if file exists and modified time after `mtime_after`.  if not, retry based on `sleep_interval`, `num_retry`, `stop_at`
 
