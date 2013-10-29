@@ -32,6 +32,7 @@ for ease of programming, I created modules,  which are wrapper scripts with pyth
     - [execute_hive_query](#execute_hive_query)
     - [wait_for_file](#wait_for_file)
     - [wait_for_table](#wait_for_table)
+    - [qa_mysql_table](#qa_mysql_table)
 * [Future Release](#future-release)
 * [Contributors](#contributors)
 * [License](#license)
@@ -545,6 +546,53 @@ To use `legoo` modules, you specify the module you want to use and the options t
       -a --stop_at          OPTIONAL: stop checking file at datetime [yyyy-mm-dd hh:mm]. i.e. [2013-10-08 15:30]
       -q --quiet --silent   OPTIONAL: suppress messages to stdout. default: [N]
       -d --debug            OPTIONAL: debug flag [Y|N], default: [N]
+
+## `qa_mysql_table`
+Instead of expensive and unwieldy `profiling`, `qa_mysql_table` takes super lightweight approach to check `MySQL` table after `etl`.
+
+##### `man page`:
+    $ ./qa_mysql_table -h
+    Usage:
+
+      Instead of expensive and unwieldy profiling, qa_mysql_table takes super lightweight approach 
+      to check mysql table after etl:
+      compare mysql query result counts to threshhold_value using comparison_operator
+      ======================================================================================
+      # check if:  1) one row created 2) interest_rate > 0 for 20131027 build
+      qa_mysql_table --mysql_db='bi' --mysql_host='bidbs' --mysql_user='root'
+      --mysql_query='select count(*) from fact_mortgage_rate where interest_rate > 0 and date_key = 20131027'
+      --comparison_operator='=' --threshhold_value=1
+      ======================================================================================
+    
+      ======================================================================================
+      # check if each colunm populated which has different source for 20131027 build.
+      # expand the where clause if necessary
+      qa_mysql_table --mysql_db='bi' --mysql_host='bidbs' --mysql_user='root'
+      --mysql_query='select count(*) from elect count(*) from agg_zip_stat_daily where date_key=20131027 and zip=94103
+      and for_sale_median_price > 0 and num_listing >0 and pdp_android_property_view_cnt 
+      --comparison_operator='>' --threshhold_value=1
+      ======================================================================================
+
+      ======================================================================================
+      # for monster table, check if partition populated with expected rows
+      # fact_property_view_anonymous has 3 billions rows partitioned on date_key
+      # check if partition 20131027 populated with more than 2 million rows
+      qa_mysql_table --mysql_db='bi' --mysql_host='bidbs' --mysql_user='root'
+      --mysql_query='select count(*) from fact_property_view_anonymous where date_key = 20131027
+      --comparison_operator='>' --threshhold_value=2000000
+      ======================================================================================
+      
+    Options:
+      -h, --help                    show this help message and exit
+      --mysql_host                  mysql host. default: [bidbs]
+      --mysql_db                    mysql db. default: [staging]
+      --mysql_user                  mysql user, if not specified, get user from mysql_ini
+      --mysql_password              mysql password, if not specified, get password from mysql_ini
+      --mysql_query                 mysql query for QA
+      --comparison_operator         comparison_operator [=, ==, >, >=, <, <=, <>, !=] to compare [query result] to [threshhold_value]
+      --threshhold_value            threshhold_value
+      -q --quiet --silent           OPTIONAL: suppress messages to stdout. default: [N]
+      -d -debug                     OPTIONAL: debug flag [Y|N], default: [N]
 
 ##### To conclude, `legoo` is a general purpose tool to transfer data among `CSV`, `MySQL`, `Hive`and `HBase` (incubating).
 
