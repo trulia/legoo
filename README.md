@@ -1,7 +1,7 @@
-Legoo: A developer tool for data transfer among `CSV`, `MySQL`, and `Hive` (`HBase` incubating)
+Legoo: A collection of automation modules to built data infrastructure consists `CSV`, `MySQL`, `Hive` and `HBase` (incubating)
 =====
 
-`legoo` is a collection of modules to automate data transfer among `CSV`, `MySQL`, and `Hive`. It's written in `Python` and provides ease of programming, flexibility, transparency, and extensibility.
+`legoo` is acollection of automation modules to built data infrastructure consists `CSV`, `MySQL`, `Hive` and `HBase` (incubating). It's written in `Python` and provides ease of programming, flexibility, transparency, and extensibility.
 
 I refer `CSV` as plain text file with delimiters such as comma, tab, etc.
 
@@ -11,7 +11,7 @@ Let me start with `MySQL LOAD INFILE` limitations that load `CSV` into `MySQL`. 
 
 To transfer data between `Hadoop`/`Hive` and `MySQL`, [Sqoop](http://sqoop.apache.org) from [Cloudera](http://www.cloudera.com) is the best tool available. However, as of 4/1/2013, the performance did not meet my expectations; It crashed when there is carriage return or hive keywords (i.e. location) in `MySQL DDL`; User can not set the `Hive` cluster dynamically; It can not create `MySQL table` dynamically when export `Hive` table to `MySQL`; Nor support `CSV` to `Hive`; only connect to `Hive` DB `default`; can not specify mapred job priority; the list goes on and on and on and on.
 
-Out of frustration and desperation, `legoo` created! 
+Out of frustration and desperation, `legoo` created! Overtime, more modules added, such as `MySQL` and `Hive` clients, dependency handling, QA, etc. 
 
 for ease of programming, I created modules,  which are wrapper scripts with python function call. Here is the high level view of modules. More details covered in [Legoo modules](#legoo-modules).
 
