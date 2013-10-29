@@ -548,7 +548,7 @@ To use `legoo` modules, you specify the module you want to use and the options t
       -d --debug            OPTIONAL: debug flag [Y|N], default: [N]
 
 ## `qa_mysql_table`
-Instead of expensive and unwieldy `profiling`, `qa_mysql_table` takes super lightweight approach to check `MySQL` table after `etl`.
+Instead of expensive and unwieldy `profiling`, `qa_mysql_table` takes lightweight approach to check `MySQL` table after `etl`.
 
 ##### `man page`:
     $ ./qa_mysql_table -h
@@ -594,6 +594,16 @@ Instead of expensive and unwieldy `profiling`, `qa_mysql_table` takes super ligh
       -q --quiet --silent           OPTIONAL: suppress messages to stdout. default: [N]
       -d -debug                     OPTIONAL: debug flag [Y|N], default: [N]
 
+##### example: check if partition `20131027` populated with 2+ millon rows in 3 billion rows table `fact_property_view_anonymous`.  
+    
+    time qa_mysql_table --mysql_db='bi' --mysql_host='bidbs' --mysql_user='root'   --mysql_query='select count(*) from fact_property_view_anonymous where date_key = 20131027' --comparison_operator='>' --threshhold_value=2000000 
+    INFO      :[legoo][execute_mysql_query][2013-10-29 14:30:54,776]:running mysql query on [bidbs]:[bi] ==>> [select count(*) from fact_property_view_anonymous where date_key = 20131027]
+    INFO      :[legoo][qa_mysql_table][2013-10-29 14:30:55,361]:[INFO] [select count(*) from fact_property_view_anonymous where date_key = 20131027] passed test: {[2882881] [>] [2000000]}
+    
+    real	0m0.639s
+    user	0m0.057s
+    sys	    0m0.010s
+    
 ##### To conclude, `legoo` is a general purpose tool to transfer data among `CSV`, `MySQL`, `Hive`and `HBase` (incubating).
 
 ## Future Release
