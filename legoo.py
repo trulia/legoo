@@ -10,9 +10,10 @@ import ConfigParser # parse mysql ini file
 import csv          # csv module for csv parsing
 import logging
 import datetime
-from optparse import OptionParser
-from time import sleep
-from pprint import pprint # pretty print for dictionary etc
+from   optparse import OptionParser
+from   time import sleep
+from   pprint import pprint # pretty print for dictionary etc
+import operator
 
 # logging config
 logging.basicConfig(
@@ -44,14 +45,14 @@ def count_lines(**kwargs):
   count_lines(file='/tmp/msa.csv', skip_header='Y')
   --------------------------------------------------------------------
   """
-  debug     = kwargs.pop("debug", "N")
+  debug       = kwargs.pop("debug", "N")
   if (debug.strip().lower() == 'y'):
     pprint(kwargs)   # pretty print kwargs
 
   # dictionary initialized with the name=value pairs in the keyword argument list
   file        = kwargs.pop("file", None)
   skip_header = kwargs.pop("skip_header", 'N' ) # flag to skip header
-  quiet              = kwargs.pop("quiet", "N")
+  quiet       = kwargs.pop("quiet", "N")
   if (quiet.strip().lower() == 'y'):
     legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
@@ -185,20 +186,20 @@ def mysql_to_hive(**kwargs):
                            quiet          = quiet, \
                            debug          = debug)
   # load csv to hive
-  csv_to_hive(hive_node              =        hive_node, \
-              hive_port              =        hive_port, \
-              hive_db                =        hive_db, \
-              hive_create_table      =        hive_create_table, \
-              hive_table             =        hive_table, \
-              hive_overwrite         =        hive_overwrite, \
-              hive_partition         =        hive_partition, \
-              hive_ddl               =        hive_ddl, \
-              mapred_job_priority    =        mapred_job_priority, \
-              csv_file               =        csv_file, \
-              csv_delimiter          =        csv_delimiter, \
-              remove_carriage_return =        remove_carriage_return, \
-              quiet                  =        quiet, \
-              debug                  =        debug)
+  csv_to_hive(hive_node                   = hive_node, \
+              hive_port                   = hive_port, \
+              hive_db                     = hive_db, \
+              hive_create_table           = hive_create_table, \
+              hive_table                  = hive_table, \
+              hive_overwrite              = hive_overwrite, \
+              hive_partition              = hive_partition, \
+              hive_ddl                    = hive_ddl, \
+              mapred_job_priority         = mapred_job_priority, \
+              csv_file                    = csv_file, \
+              csv_delimiter               = csv_delimiter, \
+              remove_carriage_return      = remove_carriage_return, \
+              quiet                       = quiet, \
+              debug                       = debug)
   # remove temp files
   remove_file(file=csv_file)
   # temp files if remove_carriage_return is on
@@ -226,7 +227,7 @@ def mysql_to_csv(**kwargs):
   csv_dir         = kwargs.pop("csv_dir", "/data/tmp/")
   csv_file        = kwargs.pop("csv_file", None)
   csv_delimiter   = kwargs.pop("csv_delimiter", 'tab')            # default to tab csv_delimiter
-  quiet              = kwargs.pop("quiet", "N")
+  quiet           = kwargs.pop("quiet", "N")
   if (quiet.strip().lower() == 'y'):
     legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
@@ -354,8 +355,8 @@ def csv_to_hive(**kwargs):
                             quiet      = quiet, debug = debug, \
                             hive_query = "DROP TABLE IF EXISTS %s" % (hive_staging_table))
   # create empty table
-  execute_remote_hive_query( hive_node = hive_node, hive_port = hive_port, \
-                             hive_db = hive_db, mapred_job_priority = mapred_job_priority, \
+  execute_remote_hive_query( hive_node  = hive_node, hive_port = hive_port, \
+                             hive_db    = hive_db, mapred_job_priority = mapred_job_priority, \
                              quiet      = quiet, debug = debug, \
                              hive_query = hive_ddl)
 
@@ -646,7 +647,7 @@ def csv_to_mysql(**kwargs):
   csv_delimiter                = kwargs.pop("csv_delimiter", 'tab')            # default to tab csv_delimiter
   csv_optionally_enclosed_by   = kwargs.pop("csv_optionally_enclosed_by", None)
   max_rows                     = kwargs.pop("max_rows", None)
-  quiet              = kwargs.pop("quiet", "N")
+  quiet                        = kwargs.pop("quiet", "N")
   if (quiet.strip().lower() == 'y'):
     legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
@@ -801,7 +802,7 @@ def execute_remote_hive_query(**kwargs):
   hive_db             = kwargs.pop("hive_db", "staging")
   hive_query          = kwargs.pop("hive_query", None)
   mapred_job_priority = kwargs.pop("mapred_job_priority", "NORMAL")
-  quiet              = kwargs.pop("quiet", "N")
+  quiet               = kwargs.pop("quiet", "N")
   if (quiet.strip().lower() == 'y'):
     legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
@@ -863,7 +864,7 @@ def execute_mysql_query(**kwargs):
   mysql_password  = kwargs.pop("mysql_password", None)
   mysql_query     = kwargs.pop("mysql_query", None)
   row_count       = kwargs.pop("row_count", "N")
-  quiet              = kwargs.pop("quiet", "N")
+  quiet           = kwargs.pop("quiet", "N")
   if (quiet.strip().lower() == 'y'):
     legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
@@ -884,6 +885,10 @@ def execute_mysql_query(**kwargs):
     rows_affected = cursor.execute(mysql_query)
     if (row_count.strip().lower() == 'y'):
       (number_of_rows,)=cursor.fetchone() # used for counts
+    else:
+      rs = cursor.fetchall()
+      if (len(rs) > 0):
+        pprint(rs)
 
     if (debug.strip().lower() == 'y'):
       legoo.info('[%s] rows affected by query [%s].' % (rows_affected, mysql_query))
@@ -896,6 +901,60 @@ def execute_mysql_query(**kwargs):
   finally:
     cursor.close()
     mysql_conn.close()
+
+def qa_mysql_table(**kwargs):
+  debug           = kwargs.pop("debug", "N")
+  if (debug.strip().lower() == 'y'):
+    pprint(kwargs)   # pretty print kwargs
+  # dictionary initialized with the name=value pairs in the keyword argument list
+  mysql_ini           = kwargs.pop("mysql_ini", "mysql.ini")
+  mysql_host          = kwargs.pop("mysql_host", "bidbs")
+  mysql_db            = kwargs.pop("mysql_db", "bi_staging")
+  mysql_user          = kwargs.pop("mysql_user", None)
+  mysql_password      = kwargs.pop("mysql_password", None)
+  mysql_query         = kwargs.pop("mysql_query", None)
+  comparison_operator = kwargs.pop("comparison_operator", None)
+  threshhold_value    = kwargs.pop("threshhold_value", None)
+  quiet               = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
+  if kwargs:
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
+    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))       # raise error and exit
+
+  (affected_rows, number_rows) = execute_mysql_query(mysql_host          = mysql_host, \
+                                                     mysql_db            = mysql_db, \
+                                                     mysql_user          = mysql_user, \
+                                                     mysql_password      = mysql_password, \
+                                                     mysql_query         = mysql_query, \
+                                                     row_count           = 'Y', \
+                                                     quiet               = quiet, \
+                                                     debug               = debug)
+
+  # print "number_rows => [%s]; options.comparison_operator => [%s];  options.threshhold => [%s]" % \        (number_rows,  options.comparison_operator,  options.threshhold)
+
+  if ( (not mysql_query) or (not comparison_operator) or (not threshhold_value)):
+    legoo.error("option mysql_query, comparison_operator, threshhold_value not all set. must specify all three ... ")      # log error
+    raise TypeError("option mysql_query, comparison_operator, threshhold_value not all set. must specify all three...")   # raise error and exit
+
+  # build operator dictionary to python built in operator
+  ops = {"=":  operator.eq,
+         "==": operator.eq,
+         "!=": operator.ne,
+         "<>": operator.ne, 
+         "<":  operator.lt,
+         "<=": operator.le, 
+         ">":  operator.gt,
+         ">=": operator.ge 
+         }
+  # may the key to the build-in operator ### 
+  op_func = ops[comparison_operator]
+
+  if op_func(int(number_rows), int(threshhold_value)):
+    legoo.info('[INFO] [%s] passed test: {[%s] [%s] [%s]}' % (mysql_query, number_rows, comparison_operator, threshhold_value))
+  else:
+    legoo.error('[ERROR] [%s] failed test: {[%s] [%s] [%s]}' % (mysql_query, number_rows, comparison_operator, threshhold_value))
+    raise TypeError('[ERROR] [%s] failed test: {[%s] [%s] [%s]}' % (mysql_query, number_rows, comparison_operator, threshhold_value))
 
 def create_mysql_connection(**kwargs):
   """return myql connection object based on configurations in mysql_ini. For security reason,
@@ -913,7 +972,7 @@ def create_mysql_connection(**kwargs):
   mysql_db        = kwargs.pop("mysql_db", "bi_staging")
   mysql_user      = kwargs.pop("mysql_user", None)
   mysql_password  = kwargs.pop("mysql_password", None)
-  quiet              = kwargs.pop("quiet", "N")
+  quiet           = kwargs.pop("quiet", "N")
   if (quiet.strip().lower() == 'y'):
     legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
@@ -959,7 +1018,7 @@ def create_mysql_connection(**kwargs):
 def create_mysql_ddl_from_csv(**kwargs):
   """return table name, mysql table ddl based on csv header. by default, scan the whole file to detect column length.
   """
-  debug     = kwargs.pop("debug", "N")
+  debug              = kwargs.pop("debug", "N")
   if (debug.strip().lower() == 'y'):
     pprint(kwargs)   # pretty print kwargs
   # dictionary initialized with the name=value pairs in the keyword argument list
@@ -1039,14 +1098,14 @@ def create_hive_ddl_from_csv(**kwargs):
   (table_name, hive_ddl)=create_hive_ddl_from_csv(csv_file='/tmp/fact_imp_pdp.csv', csv_delimiter='tab')
   ------------------------------------------------------------------------------------------------------------------
   """
-  debug     = kwargs.pop("debug", "N")
+  debug         = kwargs.pop("debug", "N")
   if (debug.strip().lower() == 'y'):
     pprint(kwargs)   # pretty print kwargs
   # dictionary initialized with the name=value pairs in the keyword argument list
-  csv_file   = kwargs.pop("csv_file", None)
-  csv_delimiter  = kwargs.pop("csv_delimiter", 'tab') # default to tab
-  table_name = kwargs.pop("table_name", None)
-  quiet              = kwargs.pop("quiet", "N")
+  csv_file      = kwargs.pop("csv_file", None)
+  csv_delimiter = kwargs.pop("csv_delimiter", 'tab') # default to tab
+  table_name    = kwargs.pop("table_name", None)
+  quiet         = kwargs.pop("quiet", "N")
   if (quiet.strip().lower() == 'y'):
     legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
   if kwargs:
@@ -1211,6 +1270,11 @@ def wait_for_table(**kwargs):
   else:
     stop_at_dt = datetime.datetime.now()
 
+  if ( mysql_table_update_after ):
+    mysql_table_update_after_dt = datetime.datetime.strptime(mysql_table_update_after, '%Y-%m-%d %H:%M')
+  else:
+    mysql_table_update_after_dt = datetime.datetime.fromtimestamp(0).strftime("%Y-%m-%d %H:%M") # set default
+
   if ( num_retry ):
     num_retry          = int(str(num_retry).strip().lower()) # format and convert to int
     if ( num_retry < 1) :
@@ -1225,7 +1289,7 @@ def wait_for_table(**kwargs):
     mysql_query = """SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
                      WHERE table_name = '%s'
                      AND update_time >= '%s'
-                     """ % ( mysql_table, mysql_table_update_after)
+                     """ % ( mysql_table, mysql_table_update_after_dt)
   elif (etl_table):
     mysql_query = """SELECT COUNT(*)
                      FROM audit.audit_job_detail ajd, audit.audit_job aj
@@ -1234,14 +1298,14 @@ def wait_for_table(**kwargs):
                      AND Task_End_Time > '%s'
                      AND LOWER(job_success_flag) = 'y'
                      AND LOWER(job_qa_success_flag) = 'y'
-                     """ % ( etl_table, mysql_table_update_after)
+                     """ % ( etl_table, mysql_table_update_after_dt)
   elif (etl_job):
     mysql_query = """SELECT COUNT(*)
                      FROM audit.audit_job
                      WHERE LOWER(job_name) LIKE '%s'
                      AND LOWER(job_success_flag) = 'y'
                      AND job_end_time >= '%s'
-                     """ % ( etl_job, mysql_table_update_after)
+                     """ % ( etl_job, mysql_table_update_after_dt)
 
   # variable for logging
   target = ''.join(filter(None, (mysql_table, etl_table,  etl_job)))
@@ -1407,3 +1471,4 @@ def main():
 if __name__ == '__main__':
     main()
 
+  

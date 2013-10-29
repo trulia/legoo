@@ -26,8 +26,6 @@ def main():
                     help="Free form query results to be exported")
   parser.add_option("--mapred_job_priority", dest="mapred_job_priority",
                     help="OPTIONAL: map reduce job priority [VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW]",  default='NORMAL')
-  parser.add_option('--debug', dest="debug",
-                    help="set the debug flag [Y|N], default: [N]")
   # register mysql options
   parser.add_option("--mysql_ini", dest="mysql_ini", \
                     help="mysql initial file for user, password and default db, default: [mysql.ini]", \

@@ -602,7 +602,7 @@ Instead of expensive and unwieldy `profiling`, `qa_mysql_table` takes lightweigh
     
     real	0m0.639s
     user	0m0.057s
-    sys	    0m0.010s
+    sys	0m0.010s
     
 ##### To conclude, `legoo` is a general purpose tool to transfer data among `CSV`, `MySQL`, `Hive`and `HBase` (incubating).
 

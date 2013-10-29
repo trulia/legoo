@@ -41,7 +41,14 @@ class TestSequenceFunctions(unittest.TestCase):
             legoo.csv_dump(csv_file=self.csv_file, csv_delimiter=',', lines=1)
         except:
             self.fail("csv_dump failed")
-            
+
+    def test008_wait_for_file_01(self):
+        # test csv_dump not throw exception
+        try:
+            legoo.wait_for_file(num_retry=3, sleep_interval=5,  file=self.csv_file)
+        except:
+            self.fail("wait_for_file failed")
+
     # test below are trulia specific due to dependency on MySQL and Hive
     def test100_execute_mysql_query(self):
         # drop target table if exists
@@ -99,6 +106,14 @@ class TestSequenceFunctions(unittest.TestCase):
             legoo.create_mysql_ddl_from_csv(table_name = self.mysql_table, csv_file = self.csv_file, csv_delimiter= ',') 
         except:
             self.fail("create_mysql_ddl_from_csv failed")
+
+    def test114_wait_for_table(self):
+        try:
+            legoo.wait_for_table(mysql_host = self.mysql_host, mysql_db = self.mysql_db, \
+                                 mysql_table = self.mysql_table, num_retry=3, sleep_interval=5)
+        except:
+            self.fail("wait_for_table failed") 
+
 
     # test below are trulia specific due to dependency on MySQL and Hive
     def test200_execute_remote_hive_query(self):
