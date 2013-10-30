@@ -1,7 +1,7 @@
 Legoo: A collection of automation modules to built data infrastructure consists `CSV`, `MySQL`, `Hive` and `HBase` (incubating)
 =====
 
-`legoo` is acollection of automation modules to built data infrastructure consists `CSV`, `MySQL`, `Hive` and `HBase` (incubating). It's written in `Python` and provides ease of programming, flexibility, transparency, and extensibility.
+`legoo` is a collection of automation modules to built data infrastructure consists `CSV`, `MySQL`, `Hive` and `HBase` (incubating). It's written in `Python` and provides ease of programming, flexibility, transparency, and extensibility.
 
 I refer `CSV` as plain text file with delimiters such as comma, tab, etc.
 
@@ -13,7 +13,7 @@ To transfer data between `Hadoop`/`Hive` and `MySQL`, [Sqoop](http://sqoop.apach
 
 Out of frustration and desperation, `legoo` created! Overtime, more modules added, such as `MySQL` and `Hive` clients, dependency handling, QA, etc. 
 
-for ease of programming, I created modules,  which are wrapper scripts with python function call. Here is the high level view of modules. More details covered in [Legoo modules](#legoo-modules).
+for ease of programming, I created modules, which are wrapper scripts with python function call. Here is the high level view of modules. More details covered in [Legoo modules](#legoo-modules).
 
 ![diagram](https://raw.github.com/trulia/legoo/master/modules.jpg?login=pluo-trulia&token=974a2a8c87eb001d1219ab09e1794b18 "module diagram")
 
