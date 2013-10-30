@@ -1,0 +1,76 @@
+#!/usr/bin/python
+
+# not using unittest framework: make it flexible to introduce more operators
+
+import legoo
+import sys
+from   optparse import OptionParser
+import operator
+
+def main():
+  usage = """
+  Instead of expensive and unwieldy profiling, qa_mysql_table takes super lightweight approach 
+  to check mysql table after etl:
+  compare mysql query result counts to threshhold_value using comparison_operator
+  ======================================================================================
+  # check if:  1) one row created 2) interest_rate > 0 for 20131027 build
+  qa_mysql_table --mysql_db='bi' --mysql_host='bidbs' --mysql_user='root'
+  --mysql_query='select count(*) from fact_mortgage_rate where interest_rate > 0 and date_key = 20131027'
+  --comparison_operator='=' --threshhold_value=1
+  ======================================================================================
+
+
+  ======================================================================================
+  # check if each colunm populated which has different source for 20131027 build.
+  # expand the where clause if necessary
+  qa_mysql_table --mysql_db='bi' --mysql_host='bidbs' --mysql_user='root'
+  --mysql_query='select count(*) from elect count(*) from agg_zip_stat_daily where date_key=20131027 and zip=94103
+  and for_sale_median_price > 0 and num_listing >0 and pdp_android_property_view_cnt 
+  --comparison_operator='>' --threshhold_value=1
+  ======================================================================================
+
+  ======================================================================================
+  # for monster table, check if partition populated with expected rows
+  # fact_property_view_anonymous has 3 billions rows partitioned on date_key
+  # check if partition 20131027 populated with more than 2 million rows
+  qa_mysql_table --mysql_db='bi' --mysql_host='bidbs' --mysql_user='root'
+  --mysql_query='select count(*) from fact_property_view_anonymous where date_key = 20131027
+  --comparison_operator='>' --threshhold_value=2000000
+  ======================================================================================
+  """
+  # create new parser object
+  parser = OptionParser(usage=usage)
+
+  parser.add_option("--mysql_host", dest="mysql_host",
+                    help="mysql host. default: [bidbs]", default='bidbs')
+  parser.add_option("--mysql_db", dest="mysql_db",
+                    help="mysql db. default: [staging]", default='staging')
+  parser.add_option("--mysql_user", dest="mysql_user",
+                    help="mysql user, if not specified, get user from mysql_ini")
+  parser.add_option("--mysql_password", dest="mysql_password",
+                    help="mysql password, if not specified, get password from mysql_ini")
+  parser.add_option("--mysql_query", dest="mysql_query", help="mysql query for QA")
+  parser.add_option("--comparison_operator", dest="comparison_operator",
+                    help="comparison_operator [=, ==, >, >=, <, <=, <>, !=] to compare [query result] to [threshhold_value]")
+  parser.add_option("--threshhold_value", dest="threshhold_value", help="threshhold_value") 
+  parser.add_option("-q", "--quiet", "--silent",  dest="quiet",
+                    help="OPTIONAL: suppress messages to stdout. default: [N]", default='N')
+  parser.add_option("-d", "--debug", dest="debug", help="OPTIONAL: debug flag [Y|N], default: [N]", default='N')
+  (options, args) = parser.parse_args()
+
+  
+  legoo.qa_mysql_table(mysql_host          = options.mysql_host, \
+                       mysql_db            = options.mysql_db, \
+                       mysql_user          = options.mysql_user, \
+                       mysql_password      = options.mysql_password, \
+                       mysql_query         = options.mysql_query, \
+                       comparison_operator = options.comparison_operator, \
+                       threshhold_value    = options.threshhold_value, \
+                       quiet               = options.quiet, \
+                       debug               = options.debug)
+
+
+    
+if __name__ == '__main__':
+  main()
+
