@@ -307,7 +307,7 @@ To use `legoo` modules, you specify the module you want to use and the options t
       --mysql_password=MYSQL_PASSWORD       OPTIONAL: mysql password, if not specified, get password from mysql_ini
       --mysql_db=MYSQL_DB                   target mysql database, default: [bi_staging]
       --mysql_table=MYSQL_TABLE             target mysql table name
-      --mysql_create_table                  mysql drop table flag [Y|N], default: [N]
+      --mysql_create_table                  mysql create table flag [Y|N], default: [N]
       --mysql_truncate_table                mysql truncate table flag [Y|N], default: [N]
       --csv_optionally_enclosed_by          optionally enclosed_by for csv file
       --max_rows=MAX_ROWS                   number of rows scanned to create mysql ddl
@@ -600,9 +600,9 @@ Instead of expensive and unwieldy `profiling`, `qa_mysql_table` takes lightweigh
     INFO      :[legoo][execute_mysql_query][2013-10-29 14:30:54,776]:running mysql query on [bidbs]:[bi] ==>> [select count(*) from fact_property_view_anonymous where date_key = 20131027]
     INFO      :[legoo][qa_mysql_table][2013-10-29 14:30:55,361]:[INFO] [select count(*) from fact_property_view_anonymous where date_key = 20131027] passed test: {[2882881] [>] [2000000]}
     
-    real	0m0.639s
-    user	0m0.057s
-    sys	0m0.010s
+    real      0m0.639s
+    user      0m0.057s
+    sys	      0m0.010s
     
 ##### To conclude, `legoo` is a general purpose tool to transfer data among `CSV`, `MySQL`, `Hive`and `HBase` (incubating).
 
