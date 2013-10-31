@@ -40,10 +40,11 @@ for ease of programming, I created modules, which are wrapper scripts with pytho
 
 ## Prerequisites
 
-* Before you can use `legoo`, `Python` module `MySQLdb` and `Hive` must be installed.
+* Install `Python` module `MySQLdb` and `Hive`.
 * Update `Python shebang` and `hive_path` reference to reflect your system configuration.
 * Create /data/tmp to store temporary files.
-* Start Hive thrift server `HiveServer` on `Hive Cluster`
+* To avoid `hdfs` file permission conflict especially for `Hive` partition tables, start `Hive` `thrift server` `HiveServer` on `Hive` Cluster with the same user as legoo user. 
+* Set up `SSH` login without password from server `legoo` modules being run to `Hive` cluster. Typical setup: run `legoo` modules from `command center` server which reference remote `MySQL` servers and remote `Hive` cluster. 
 
 `modules` have been tested on `Python 2.6`, `MySQL 5.1`, `Hive 0.7`,  and `Hive 0.10`. This document assumes you are using a Linux or Linux-like environment.
 
