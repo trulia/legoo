@@ -610,6 +610,8 @@ Instead of expensive and unwieldy `profiling`, `qa_mysql_table` takes lightweigh
 * option `config_file` for unit testing
 * module `csv_to_graph`, `mysql_to_graph`, `hive_to_graph` to generate graph 
 * module `email` for notification
+* `Apache HBase` client
+* `Apache Kafka` client
 * more ...
 
 ## Contributors
