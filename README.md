@@ -604,10 +604,13 @@ Instead of expensive and unwieldy `profiling`, `qa_mysql_table` takes lightweigh
     user      0m0.057s
     sys	      0m0.010s
     
-##### To conclude, `legoo` is a general purpose tool to transfer data among `CSV`, `MySQL`, `Hive`and `HBase` (incubating).
-
 ## Future Release
-Next release would have new options like `dry_run`, `escape_hive_keyword`, `config_file` for unit testing, etc. 
+* option `dry_run`
+* option `escape_hive_keyword` to escape hive keywords 
+* option `config_file` for unit testing
+* module `csv_to_graph`, `mysql_to_graph`, `hive_to_graph` to generate graph 
+* module `email` for notification
+* more ...
 
 ## Contributors
 * Patrick Luo ([partick.luo2006@gmail.com]())
