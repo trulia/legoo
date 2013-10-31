@@ -568,7 +568,7 @@ Instead of expensive and unwieldy `profiling`, `qa_mysql_table` takes lightweigh
       # check if each colunm populated which has different source for 20131027 build.
       # expand the where clause if necessary
       qa_mysql_table --mysql_db='bi' --mysql_host='bidbs' --mysql_user='root'
-      --mysql_query='select count(*) from elect count(*) from agg_zip_stat_daily where date_key=20131027 and zip=94103
+      --mysql_query='select count(*) from agg_zip_stat_daily where date_key=20131027 and zip=94103
       and for_sale_median_price > 0 and num_listing >0 and pdp_android_property_view_cnt 
       --comparison_operator='>' --threshhold_value=1
       ======================================================================================
