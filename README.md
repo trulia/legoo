@@ -51,7 +51,7 @@ for ease of programming, I created modules, which are wrapper scripts with pytho
 Run unit test `test/unittest_legoo.py` for functional testing. Sample csv `census_population.csv` was used to load into `MySQL` and `Hive` table. User need to supply `Hive` and `MySQL` enviroment variables under section `setUp`
 
 ## Legoo Modules
-To use `legoo` modules, you specify the module you want to use and the options that control the module. All modules ship with a help module. To display help with all avaialble options and sample usages, enter: `module_name -h` or `module_name --help` I will go over each of those modules briefly in turn.
+To use `legoo` modules, you specify the module you want to use and the options that control the module. All modules ship with a help module. If error encountered or internal test failed, exception thrown, return_code set to 1, then control returned back to calling process. To display help with all avaialble options and sample usages, enter: `module_name -h` or `module_name --help` I will go over each of those modules briefly in turn.
 
 ### `csv_dump`
 `csv_dump` is a `CSV` viewer with options for `--delimiter` and `--line_number`. It maps each field value to field name defined in header; print them out vertically with line number and column number. `csv_dump` allows user to dig into the middle of file with `--line_number` option. It is extremely handy to investigate data issues in a large `CSV` file having tons of fields.
