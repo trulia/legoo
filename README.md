@@ -1,7 +1,7 @@
-Legoo: A collection of automation modules to build data infrastructure
+Legoo: A collection of automation modules to build analytics infrastructure
 =====
 
-`legoo` is a collection of automation modules to build data infrastructure consists `CSV`, `MySQL`, `Hive` and `HBase` (incubating). It's written in `Python` and provides ease of programming, flexibility, transparency, and extensibility.
+`legoo` is a collection of automation modules to build analytics infrastructure consists `CSV`, `MySQL`, `Hive` and `HBase` (incubating). It's written in `Python` and provides ease of programming, flexibility, transparency, and extensibility.
 
 I refer `CSV` as plain text file with delimiters such as comma, tab, etc.
 
