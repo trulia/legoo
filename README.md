@@ -15,12 +15,12 @@ Out of frustration and desperation, `legoo` created! Overtime, more modules adde
 
 for ease of programming, I created modules, which are wrapper scripts with python function call. Here is the high level view of modules. More details covered in [Legoo modules](#legoo-modules).
 
-![diagram](https://raw.github.com/trulia/legoo/master/ppt/architecture.jpg "architecture diagram")
+![diagram](https://raw.github.com/trulia/legoo/master/ppt/diagram_arch.jpg "architecture diagram")
+![diagram](https://raw.github.com/trulia/legoo/master/ppt/diagram_module.jpg "module diagram")
 
 * [Prerequisites](#prerequisites)
 * [Unit Test](#unit-test)
 * [Legoo Modules](#legoo-modules)
-![diagram](https://raw.github.com/trulia/legoo/master/ppt/modules.jpg "module diagram")
     - [csv_dump](#csv_dump)
     - [csv_to_mysql](#csv_to_mysql)
     - [csv_to_hive](#csv_to_hive)
@@ -40,11 +40,13 @@ for ease of programming, I created modules, which are wrapper scripts with pytho
 
 ## Prerequisites
 
-* Install `Python` module `MySQLdb` and `Hive`.
+* Install `Python` module `MySQLdb`.
 * Update `Python shebang` and `hive_path` reference to reflect your system configuration.
 * Create /data/tmp to store temporary files.
-* To avoid `hdfs` file permission conflict especially for `Hive` partition tables, start `Hive` `thrift server` `HiveServer` on `Hive` Cluster with the same user as legoo user. 
-* Set up `SSH` login without password from server `legoo` modules being run to `Hive` cluster. Typical setup: run `legoo` modules from `command center` server which reference remote `MySQL` servers and remote `Hive` cluster. 
+* Hive configuration
+    -  Install `Python` module `Hive`.
+    -  To avoid `hdfs` file permission conflict especially for `Hive` partition tables, start `Hive` `thrift server` `HiveServer` on `Hive` Cluster using the same user as legoo user. 
+    -  Set up `SSH` login without password from server `legoo` modules being run to `Hive` cluster. Typical setup: run `legoo` modules from `command center` server which reference remote `MySQL` servers and remote `Hive` cluster. 
 
 `modules` have been tested on `Python 2.6`, `MySQL 5.1`, `Hive 0.7`,  and `Hive 0.10`. This document assumes you are using a Linux or Linux-like environment.
 
