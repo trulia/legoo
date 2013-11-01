@@ -46,7 +46,7 @@ Here is the high level view of ETL architecture and modules. More details covere
 * Update `Python shebang` and `hive_path` reference to reflect your system configuration.
 * Create /data/tmp to store temporary files.
 * Hive configuration
-    -  Install `Python` module `Hive`.
+    -  find path for `Hive Python` client and add to sys.path if different than default location: `/usr/lib/hive/lib/py`
     -  To avoid `hdfs` file permission conflict especially for `Hive` partition tables, start `Hive` `thrift server` `HiveServer` on `Hive` Cluster using the same user as legoo user. 
     -  Set up `SSH` login without password from server `legoo` modules being run to `Hive` cluster. Typical setup: run `legoo` modules from `command center` server which reference remote `MySQL` servers and remote `Hive` cluster. 
 
