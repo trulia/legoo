@@ -17,6 +17,7 @@ for ease of programming, I created modules, which are wrapper scripts with pytho
 
 ![diagram](https://raw.github.com/trulia/legoo/master/modules.jpg?login=pluo-trulia&token=974a2a8c87eb001d1219ab09e1794b18 "module diagram")
 
+![diagram](https://raw.github.com/trulia/legoo/master/ppt/architecture.jpg "architecture diagram")
 
 * [Prerequisites](#prerequisites)
 * [Unit Test](#unit-test)
