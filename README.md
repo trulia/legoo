@@ -15,13 +15,12 @@ Out of frustration and desperation, `legoo` created! Overtime, more modules adde
 
 for ease of programming, I created modules, which are wrapper scripts with python function call. Here is the high level view of modules. More details covered in [Legoo modules](#legoo-modules).
 
-![diagram](https://raw.github.com/trulia/legoo/master/modules.jpg?login=pluo-trulia&token=974a2a8c87eb001d1219ab09e1794b18 "module diagram")
-
 ![diagram](https://raw.github.com/trulia/legoo/master/ppt/architecture.jpg "architecture diagram")
 
 * [Prerequisites](#prerequisites)
 * [Unit Test](#unit-test)
 * [Legoo Modules](#legoo-modules)
+![diagram](https://raw.github.com/trulia/legoo/master/ppt/modules.jpg "module diagram")
     - [csv_dump](#csv_dump)
     - [csv_to_mysql](#csv_to_mysql)
     - [csv_to_hive](#csv_to_hive)
