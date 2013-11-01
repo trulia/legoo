@@ -13,7 +13,9 @@ To transfer data between `Hadoop`/`Hive` and `MySQL`, [Sqoop](http://sqoop.apach
 
 Out of frustration and desperation, `legoo` created! Overtime, more modules added, such as `MySQL` and `Hive` clients, dependency handling, QA, etc. 
 
-for ease of programming, I created modules, which are wrapper scripts with python function call. Here is the high level view of modules. More details covered in [Legoo modules](#legoo-modules).
+for ease of programming, I created modules, which are wrapper scripts with python function call. 
+
+Here is the high level view of ETL architecture and modules. More details covered in [Legoo modules](#legoo-modules).
 
 ![diagram](https://raw.github.com/trulia/legoo/master/ppt/diagram_arch.jpg "architecture diagram")
 ![diagram](https://raw.github.com/trulia/legoo/master/ppt/diagram_module.jpg "module diagram")
