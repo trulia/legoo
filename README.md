@@ -5,13 +5,13 @@ Legoo: A collection of automation modules to build analytics infrastructure
 
 I refer `CSV` as plain text file with delimiters such as comma, tab, etc.
 
-There are tools already such as `MySQL LOAD INFILE`, [Sqoop](http://sqoop.apache.org) etc. Then why reinvent the wheel?
+There are tools already such as `MySQL LOAD INFILE`, [Apache Sqoop](http://sqoop.apache.org) etc. Then why reinvent the wheel?
 
 Let me start with `MySQL LOAD INFILE` limitations that load `CSV` into `MySQL`. First, target table must be pre defined. This would be a challenge if there were a lot of fields in `CSV`. For instance, we have `CSV` from `salesforce` having 200+ columns. Creating `MySQL DDL` with appropriate column length is frustrating to say the least; second, user need to memorize the `load infile` syntax with variious opitons, i.e. `local`, `ignore lines`, `optionally enclosed by` etc; Third, lacking of verification on `CSV` line count to table row count;
 
-To transfer data between `Hadoop`/`Hive` and `MySQL`, [Sqoop](http://sqoop.apache.org) from [Cloudera](http://www.cloudera.com) is the best tool available. However, as of 4/1/2013, the performance did not meet my expectations; It crashed when there is carriage return or hive keywords (i.e. location) in `MySQL DDL`; User can not set the `Hive` cluster dynamically; It can not create `MySQL table` dynamically when export `Hive` table to `MySQL`; Nor support `CSV` to `Hive`; only connect to `Hive` DB `default`; can not specify mapred job priority; the list goes on and on and on and on.
+To transfer data between `Hive` and `MySQL`, [Apache Sqoop](http://sqoop.apache.org) from [Cloudera](http://www.cloudera.com) is the best tool available. However, as of 4/1/2013, the performance did not meet my expectations; It crashed when there is carriage return or hive keywords (i.e. location) in `MySQL` source data; User can not set the `Hive` cluster dynamically; It can not create `MySQL table` dynamically when export `Hive` table to `MySQL`; Nor support `CSV` to `Hive`; only connect to `Hive` DB `default`; can not specify mapred job priority; the list goes on and on and on and on.
 
-Out of frustration and desperation, `legoo` created! Overtime, more modules added, such as `MySQL` and `Hive` clients, dependency handling, QA, etc. 
+Out of frustration and desperation, `legoo` created! Overtime, more modules added, such as `MySQL` and `Hive` client, dependency handling, QA, etc. 
 
 for ease of programming, I created modules, which are wrapper scripts with python function call. 
 
@@ -43,14 +43,13 @@ Here is the high level view of ETL architecture and modules. More details covere
 ## Prerequisites
 
 * Install `Python` module `MySQLdb`.
-* Update `Python shebang` and `hive_path` reference to reflect your system configuration.
 * Create /data/tmp to store temporary files.
 * Hive configuration
-    -  find path for `Hive Python` client and add to sys.path if different than default location: `/usr/lib/hive/lib/py`
-    -  To avoid `hdfs` file permission conflict especially for `Hive` partition tables, start `Hive` `thrift server` `HiveServer` on `Hive` Cluster using the same user as legoo user. 
+    -  find path for `Hive Python` client and add to `sys.path` if different than default location: `/usr/lib/hive/lib/py`
+    -  To avoid `hdfs` file permission conflict especially for `Hive` partition tables, start thrift server `HiveServer` on `Hive` cluster using the same user as legoo user. 
     -  Set up `SSH` login without password from server `legoo` modules being run to `Hive` cluster. Typical setup: run `legoo` modules from `command center` server which reference remote `MySQL` servers and remote `Hive` cluster. 
 
-`modules` have been tested on `Python 2.6`, `MySQL 5.1`, `Hive 0.7`,  and `Hive 0.10`. This document assumes you are using a Linux or Linux-like environment.
+`modules` have been tested on `Python 2.6`, `Python 2.7`, , `MySQL 5.1`, `Hive 0.7`,  and `Hive 0.10`. This document assumes you are using a Linux or Linux-like environment.
 
 ## Unit Test
 Run unit test `test/unittest_legoo.py` for functional testing. Sample csv `census_population.csv` was used to load into `MySQL` and `Hive` table. User need to supply `Hive` and `MySQL` enviroment variables under section `setUp`
