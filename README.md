@@ -250,7 +250,7 @@ To use `legoo` modules, you specify the module you want to use and the options t
 ##### example: transfer query results from `MySQL` to `Hive` table `email_archive.fe_emailrecord_archive` `partition (date_key=20130710)` on `Hive` cluster. remove carriage return from the source data before transfer.
 
     $ mysql_to_hive --mysql_host='maildb-slave' --mysql_db='Email' --mysql_table='FE_EmailRecord' --mysql_query="select f.* from Email.FE_EmailRecord f where time_stamp > '2013-05-01' and time_stamp < '2013-05-02'" --hive_table='fe_emailrecord_archive' --hive_db='email_archive'  --remove_carriage_return='Y' --hive_partition="date_key=20130710"
-
+    [INFO]  [mysql_to_csv][2013-11-18 10:06:08,580]:Running mysql export to csv ==>> [mysql -hmaildb-slave -uroot  Email  -e "select f.* from Email.FE_EmailRecord f where time_stamp > '2013-11-17' and time_stamp <= '2013-11-18'" > /data/tmp//FE_EmailRecord.csv]
     [INFO] running hive query on [namenode1]:[email_archive] ==>> [desc fe_emailrecord_archive]
     [INFO] running hive query on [namenode1]:[email_archive] ==>> [DROP TABLE IF EXISTS tmp_FE_EmailRecord]
     [INFO] running hive query on [namenode1]:[email_archive] ==>> [CREATE TABLE tmp_FE_EmailRecord (
