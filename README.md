@@ -11,7 +11,7 @@ Let me start with `MySQL LOAD INFILE` limitations that load `CSV` into `MySQL`. 
 
 To transfer data between `Hive` and `MySQL`, [Apache Sqoop](http://sqoop.apache.org) from [Cloudera](http://www.cloudera.com) is the best tool available. However, as of 4/1/2013, the performance did not meet my expectations; It crashed when there is carriage return or hive keywords (i.e. location) in `MySQL` source data; User can not set the `Hive` cluster dynamically; It can not create `MySQL table` dynamically when export `Hive` table to `MySQL`; Nor support `CSV` to `Hive`; only connect to `Hive` DB `default`; can not specify mapred job priority; the list goes on and on and on and on.
 
-Out of frustration and desperation, `legoo` created! Overtime, more modules added, such as `MySQL` and `Hive` client, dependency handling, QA, etc. 
+Out of frustration and desperation, `legoo` created! Overtime, more modules added, such as `MySQL` and `Hive` client, dependency handling, QA, notification etc. 
 
 for ease of programming, I created modules, which are wrapper scripts with python function call. 
 
@@ -35,6 +35,7 @@ Here is the high level view of ETL architecture and modules. More details covere
     - [wait_for_file](#wait_for_file)
     - [wait_for_table](#wait_for_table)
     - [qa_mysql_table](#qa_mysql_table)
+    - [send_mail](#send_mail)
 * [Future Release](#future-release)
 * [Contributors](#contributors)
 * [License](#license)
@@ -555,7 +556,7 @@ To use `legoo` modules, you specify the module you want to use and the options t
 Instead of expensive and unwieldy `profiling`, `qa_mysql_table` takes lightweight approach to check `MySQL` table after `etl`.
 
 ##### `man page`:
-    $ ./qa_mysql_table -h
+    $ qa_mysql_table -h
     Usage:
 
       Instead of expensive and unwieldy profiling, qa_mysql_table takes super lightweight approach 
@@ -608,14 +609,40 @@ Instead of expensive and unwieldy `profiling`, `qa_mysql_table` takes lightweigh
     user      0m0.057s
     sys	      0m0.010s
     
+## `send_mail`
+send `email` in `plain` or `html` format, and attach `files` from list or `dir`
+
+
+##### `man page`:
+    $ send_mail -h
+    
+    Usage: 
+      send email in plain or html format, and attach files from list or dir
+      ==================================================================================================================================================================
+      send_mail  --sender='luo@trulia.com' --subject='legoo email' --receivers='pluo@trulia.com' --body_html_file='/home/dataproc/bar.html' --attachment_files='csv_dump'
+      ===================================================================================================================================================================
+  
+    Options:
+        -h, --help                show this help message and exit
+        --smtp_server             MANDATORY: smtp server name. default: [mx1.sv2.trulia.com]
+        --smtp_port               smtp port number. default: [25]
+        --sender                  MANDATORY: sender eamil
+        --receivers               MANDATORY: list of email recipients. i.e. 'a@xyz.com, b@xyz.com'
+        --subject                 email subject
+        --body_text               OPTIONAL: text as email body
+        --body_text_file          OPTIONAL: file used as email body
+        --body_html               OPTIONAL: html as email body
+        --body_html_file          OPTIONAL: html file used as email body
+        --attachment_files        OPTIONAL: list of files as attachment
+        --attachment_dir          OPTIONAL: attach all files (not recursively) in directory
+        -q, --quiet, --silent     OPTIONAL: suppress messages to stdout. default: [N]
+        -d --debug                OPTIONAL: debug flag [Y|N], default: [N]
+    
 ## Future Release
 * option `dry_run`
 * option `escape_hive_keyword` to escape hive keywords 
 * option `config_file` for unit testing
-* module `csv_to_graph`, `mysql_to_graph`, `hive_to_graph` to generate graph 
-* module `email` for notification
 * `Apache HBase` client
-* `Apache Kafka` client
 * more ...
 
 ## Contributors
