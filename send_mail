@@ -1,0 +1,53 @@
+#!/usr/bin/python
+import legoo
+import sys
+from   optparse import OptionParser
+import operator
+
+def main():
+  usage = """
+  send email in plain or html format, and attach files from list or dir
+  ===================================================================================================================================================================
+  send_mail  --sender='luo@trulia.com' --subject='legoo email' --receivers='pluo@trulia.com' --body_html_file='/home/dataproc/bar.html' --attachment_files='csv_dump'
+  ===================================================================================================================================================================
+  """
+  # create new parser object
+  parser = OptionParser(usage=usage)
+  parser.add_option("--smtp_server", dest="smtp_server",
+                    help="MANDATORY: smtp server name. default: [mx1.sv2.trulia.com]", default="mx1.sv2.trulia.com")
+  parser.add_option("--smtp_port", dest="smtp_port", help="smtp port number. default: [25]", default=25)
+  parser.add_option("--sender", dest="sender", help="MANDATORY: sender eamil")
+  parser.add_option("--receivers", dest="receivers", help="MANDATORY: list of email recipients. i.e. 'a@xyz.com, b@xyz.com'")
+  parser.add_option("--subject", dest="subject", help="email subject")
+  parser.add_option("--body_text", dest="body_text", help="OPTIONAL: text as email body")
+  parser.add_option("--body_text_file", dest="body_text_file", help="OPTIONAL: file used as email body")
+  parser.add_option("--body_html", dest="body_html", help="OPTIONAL: html as email body")
+  parser.add_option("--body_html_file", dest="body_html_file", help="OPTIONAL: html file used as email body")
+  parser.add_option("--attachment_files", dest="attachment_files",
+                    help="OPTIONAL: list of files as attachment", default='[]')
+  parser.add_option("--attachment_dir", dest="attachment_dir",
+                    help="OPTIONAL: attach all files (not recursively) in directory")
+  parser.add_option("-q", "--quiet", "--silent",  dest="quiet",
+                    help="OPTIONAL: suppress messages to stdout. default: [N]", default='N')
+  parser.add_option("-d", "--debug", dest="debug", help="OPTIONAL: debug flag [Y|N], default: [N]", default='N')
+  (options, args) = parser.parse_args()
+  
+  legoo.send_mail(sender           = options.sender, \
+                  receivers        = options.receivers, \
+                  subject          = options.subject, \
+                  smtp_server      = options.smtp_server, \
+                  smtp_port        = options.smtp_port, \
+                  body_text        = options.body_text, \
+                  body_text_file   = options.body_text_file, \
+                  body_html        = options.body_html, \
+                  body_html_file   = options.body_html_file , \
+                  attachment_files = options.attachment_files , \
+                  attachment_dir   = options.attachment_dir, \
+                  quiet            = options.quiet, \
+                  debug            = options.debug)
+
+if __name__ == '__main__':
+  main()
+
+
+

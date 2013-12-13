@@ -1430,9 +1430,104 @@ def dos_to_unix( orig_file, new_file=None):
   rc = subprocess.call(["dos_to_unix", "-n", file, new_file])
   return new_file
 
+
+def send_mail(**kwargs):
+  """send email
+  ---------------------------------------------------------
+  ---------------------------------------------------------
+  """
+  debug              = kwargs.pop("debug", "N")
+  # print kwargs
+  if (debug.strip().lower() == 'y'):
+      pprint(kwargs)
+  # dictionary initialized with the name=value pairs in the keyword argument list
+  sender             = kwargs.pop("sender", None)
+
+  receivers          = kwargs.pop("receivers", []) # ['pluo@trulia.com']
+  if not receivers:
+      legoo.error("option receivers is missing") 
+      raise TypeError("option receivers is missing")
+  elif type(receivers) <> list:
+      # convert comma seperate string to list. 
+      receivers = [r.strip() for r in receivers.split(',') ] 
+
+  subject            = kwargs.pop("subject", None)
+  if not subject:
+      legoo.warning("subject is NULL")
+  smtp_server        = kwargs.pop("smtp_server", "mx1.sv2.trulia.com")
+  smtp_port        = kwargs.pop("smtp_port", 25)
+  body_text          = kwargs.pop("body_text", None)
+  body_text_file     = kwargs.pop("body_text_file", None) # ['foo.py', '../show_env.py']
+  body_html          = kwargs.pop("body_html", None)
+  body_html_file     = kwargs.pop("body_html_file", None)
+  attachment_files   = kwargs.pop("attachment_files", [])
+  attachment_dir     = kwargs.pop("attachment_dir", None)
+
+  quiet              = kwargs.pop("quiet", "N")
+  if (quiet.strip().lower() == 'y'):
+    legoo.removeHandler(info_hand)     # suppress logging if variable quiet set to Y
+  if kwargs:
+    legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
+    raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))       # raise error and exit
+
+  # import smtp and related modules 
+  import smtplib, os
+  from email.MIMEMultipart import MIMEMultipart
+  from email.MIMEBase import MIMEBase
+  from email.MIMEText import MIMEText
+  from email.Utils import COMMASPACE, formatdate
+  from email import Encoders
+  from os import listdir
+  from os.path import isfile, join
+
+  # build message 
+  msg = MIMEMultipart()
+  msg['From'] = sender
+  msg['To'] = COMMASPACE.join(receivers)
+  msg['Date'] = formatdate(localtime=True)
+  msg['Subject'] = subject
+
+  # build the plain text body
+  if body_text: 
+      msg.attach(MIMEText(body_text, 'plain'))
+  if body_text_file:
+      msg.attach(MIMEText(open(body_text_file,"rb").read(), 'plain')) 
+
+  # build html body
+  if body_html: 
+      msg.attach(MIMEText(body_html, 'html'))
+  if body_html_file:
+      msg.attach(MIMEText(open(body_html_file,"rb").read(), 'html')) 
+
+  # warning: if body is EMPTY
+  if not ( body_html or body_html_file or body_text or body_text_file):
+      legoo.warning("message body if empty, specify one of boby options [body_html, body_html_file, body_text, body_text_file]") 
+
+  # convert comma seperate string to list 
+  if type(attachment_files) <> list:
+      attachment_files = attachment_files.split(',')
+
+  # append list of files from attachment_dir to attachment_files: 
+  if attachment_dir: 
+      attachment_files += [ f for f in listdir(attachment_dir) if isfile(join(attachment_dir,f)) ]
+
+  # attach files 
+  if attachment_files: 
+      for f in attachment_files:
+          part = MIMEBase('application', "octet-stream")
+          part.set_payload( open(f.strip(),"rb").read() )
+          Encoders.encode_base64(part)
+          part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(f))
+          msg.attach(part)
+
+  # send mail 
+  smtp = smtplib.SMTP(smtp_server, smtp_port)
+  smtp.sendmail(sender, receivers, msg.as_string())
+  smtp.close()
+
 def main():
   # create_mysql_ddl_from_csv(dos_to_unix('/tmp/msa.csv'), ',')
-  DEBUG='N'
+  # DEBUG='N'
   # (table_name, mysql_ddl) = create_mysql_ddl_from_csv(csv_file="/tmp/fact_imp_pdp.csv", csv_delimiter = 'tab', mysql_create_table = 'Y', debug='Y')
   # (table_name, mysql_ddl) = create_mysql_ddl_from_csv(csv_file="/tmp/dim_listing_delta.csv", csv_delimiter = 'tab', mysql_create_table = 'Y', max_rows=60000)
   # csv_to_mysql(csv_file="/tmp/dim_listing_delta.csv", csv_delimiter='tab', mysql_create_table='Y')
@@ -1466,9 +1561,10 @@ def main():
   # wait_for_table(mysql_host='bidbs', mysql_db='bi', mysql_table='dim_property', \
   #               mysql_table_update_after = '2013-10-09 03:00', \
   #              sleep_interval = 30, num_retry = 6, stop_at = '12:46', debug='Y', quiet='Y')
+  # send_mail( sender = 'pluo@trulia.com', receivers = 'pluo@trulia.com, luo@trulia.com', subject = 'legoo', body_html_file = 'bar.html',  attachment_dir   = '../legoo', attachment_files = ['../show_env.py'], body_text_file = 'csv_dump')
   pass
 
 if __name__ == '__main__':
     main()
 
-  
+
