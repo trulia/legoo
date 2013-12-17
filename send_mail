@@ -24,7 +24,7 @@ def main():
   parser.add_option("--body_html", dest="body_html", help="OPTIONAL: html as email body")
   parser.add_option("--body_html_file", dest="body_html_file", help="OPTIONAL: html file used as email body")
   parser.add_option("--attachment_files", dest="attachment_files",
-                    help="OPTIONAL: list of files as attachment", default='[]')
+                    help="OPTIONAL: list of files as attachment")
   parser.add_option("--attachment_dir", dest="attachment_dir",
                     help="OPTIONAL: attach all files (not recursively) in directory")
   parser.add_option("-q", "--quiet", "--silent",  dest="quiet",

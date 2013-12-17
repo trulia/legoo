@@ -1460,7 +1460,7 @@ def send_mail(**kwargs):
   body_text_file     = kwargs.pop("body_text_file", None) # ['foo.py', '../show_env.py']
   body_html          = kwargs.pop("body_html", None)
   body_html_file     = kwargs.pop("body_html_file", None)
-  attachment_files   = kwargs.pop("attachment_files", [])
+  attachment_files   = kwargs.pop("attachment_files", None)
   attachment_dir     = kwargs.pop("attachment_dir", None)
 
   quiet              = kwargs.pop("quiet", "N")
@@ -1504,14 +1504,14 @@ def send_mail(**kwargs):
       legoo.warning("message body if empty, specify one of boby options [body_html, body_html_file, body_text, body_text_file]") 
 
   # convert comma seperate string to list 
-  if type(attachment_files) <> list:
+  if attachment_files and type(attachment_files) <> list:
       attachment_files = attachment_files.split(',')
 
   # append list of files from attachment_dir to attachment_files: 
   if attachment_dir: 
       attachment_files += [ f for f in listdir(attachment_dir) if isfile(join(attachment_dir,f)) ]
 
-  # attach files 
+  # attach files
   if attachment_files: 
       for f in attachment_files:
           part = MIMEBase('application', "octet-stream")
