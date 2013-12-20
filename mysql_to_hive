@@ -29,37 +29,37 @@ def main():
   parser.add_option("--mysql_db", dest="mysql_db",
                     help="mysql database for source data, default: [bi]", default='bi')
   parser.add_option("--mysql_user", dest="mysql_user",
-                    help="OPTIONAL: mysql user, if not specified, get user from mysql_ini")
+                    help="MANDATORY: mysql user, if not specified, get user from mysql_ini")
   parser.add_option("--mysql_password", dest="mysql_password",
-                    help="OPTIONAL: mysql password, if not specified, get password from mysql_ini")
+                    help="MANDATORY OPTIONAL: mysql password, if not specified, get password from mysql_ini")
   parser.add_option("--mysql_quick", dest="mysql_quick",
-                    help="OPTIONAL: --quick option for mysql client, default:[N]", default='N')
+                    help="--quick option for mysql client, default:[N]", default='N')
   parser.add_option("--mysql_table", dest="mysql_table",
                     help="mysql table to be exported")
   parser.add_option("--mysql_query", dest="mysql_query",
                     help="query results to be exported")
   parser.add_option("--hive_node", dest="hive_node",
-                    help="OPTIONAL: target hive node. default: [namenode1]", default='namenode1')
+                    help="target hive node. default: [namenode1]", default='namenode1')
   parser.add_option("--hive_port", dest="hive_port",
-                    help="OPTIONAL: target hive port. default: 10000", default='10000')
+                    help="target hive port. default: 10000", default='10000')
   parser.add_option("--hive_db", dest="hive_db",
-                    help="OPTIONAL: target hive db. default: [staging]", default='staging')
+                    help="target hive db. default: [staging]", default='staging')
   parser.add_option("--hive_ddl", dest="hive_ddl",
-                    help="OPTIONAL: hive DDL for target hive table. default created from source mysql table")
+                    help="hive DDL for target hive table. default created from source mysql table")
   parser.add_option("--hive_create_table", dest="hive_create_table",
-                    help="OPTIONAL: CREATE_TABLE flag for hive table DDL. default: [N]", default='N')
+                    help="CREATE_TABLE flag for hive table DDL. default: [N]", default='N')
   parser.add_option("--hive_overwrite", dest="hive_overwrite",
-                    help="OPTIONAL: OVERWRITE flag for hive table loading. default: [Y]", default='Y')
+                    help="OVERWRITE flag for hive table loading. default to [N] as append mode", default='N')
   parser.add_option("--mapred_job_priority", dest="mapred_job_priority",
-                    help="OPTIONAL: map reduce job priority [VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW]",  default='NORMAL')
+                    help="map reduce job priority [VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW]",  default='NORMAL')
   parser.add_option("--hive_table", dest="hive_table",
-                    help="OPTIONAL: hive table name. default: created from csv file name")
+                    help="hive table name. default: created from csv file name")
   parser.add_option("--hive_partition", dest="hive_partition",
                     help="partition name i.e. date_int=20130428")
   parser.add_option("--remove_carriage_return", dest="remove_carriage_return",
-                    help="OPTIONAL: remove carriage return from mysql source table. default: [N]", default='N')
+                    help="remove carriage return from mysql source table. default: [N]", default='N')
   parser.add_option("-q", "--quiet", "--silent",  dest="quiet",
-                    help="OPTIONAL: suppress messages to stdout. default: [N]", default='N')
+                    help="suppress messages to stdout. default: [N]", default='N')
   parser.add_option("-d", "--debug", dest="debug", help="OPTIONAL: debug flag [Y|N], default: [N]", default='N')
   (options, args) = parser.parse_args()
 
