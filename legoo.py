@@ -327,6 +327,36 @@ def csv_to_hive(**kwargs):
     legoo.error("hive_table variable need to specified")    # log error
     raise TypeError("[ERROR] hive_table variable need to specified")
 
+  # if not hive_overwrite, set to append mode
+  if (hive_overwrite.strip().lower() == 'y'):
+    hive_overwrite = 'OVERWRITE'
+  else:
+    hive_overwrite = 'INTO'
+
+  # When input file has no header, create temp file with dummy header
+  if (csv_header.strip().lower() <> 'y'):
+    legoo.info("audto generating csv header ...")
+    temp_file = csv_file + '2'
+    # read first line of file
+    with open(csv_file, 'r') as f:
+      first_line = f.readline()
+    # autogen column name list
+    if (csv_delimiter.strip().lower() == 'tab'):
+      raw_delimiter = '\t'
+    else:
+      raw_delimiter = csv_delimiter
+
+    header_list = [ 'col_' + str(i) for i in range(len(first_line.split(raw_delimiter)))]
+    # write header to temp file
+    with open(temp_file,'w') as f:
+      wr = csv.writer(f,  delimiter=raw_delimiter, quoting=csv.QUOTE_ALL, lineterminator='\n')
+      wr.writerow(header_list)
+
+    cmd_append = 'cat %s >> %s' % (csv_file, temp_file) # cmd to append file
+    os.system( cmd_append )  # os.system call is easier than subprocess
+    csv_file = temp_file
+    csv_header = 'Y'
+
   # chcek table if exists on hive
   if (hive_create_table.strip().lower() == 'n'):
     execute_remote_hive_query( hive_node = hive_node, hive_port = hive_port, \
@@ -339,15 +369,15 @@ def csv_to_hive(**kwargs):
 
   # create hive staging table ddl based on csv header, then create hive staging table
   (filename, extension) =  os.path.splitext(os.path.basename(csv_file))
-  hive_staging_table = "tmp_%s" % (filename)
+  hive_staging_table = "tmp_legoo_%s" % (os.getpid())
   # replace . with _ in table name
-  hive_staging_table = hive_staging_table.replace('.', '_')
+  # hive_staging_table = hive_staging_table.replace('.', '_')
 
   # create staging table ddl
   (hive_staging_table, hive_ddl) = create_hive_ddl_from_csv(csv_file      = csv_file, \
                                                             csv_delimiter = csv_delimiter, \
                                                             table_name    = hive_staging_table, \
-                                                            quiet          = quiet, \
+                                                            quiet         = quiet, \
                                                             debug         = debug)
   # drop staging table if exists
   execute_remote_hive_query(hive_node  = hive_node, hive_port = hive_port, \
@@ -393,7 +423,7 @@ def csv_to_hive(**kwargs):
   elif (hive_create_table.strip().lower() == 'y'):
     hive_query = "ALTER TABLE %s RENAME TO %s" % (hive_staging_table, hive_table)
   elif (hive_create_table.strip().lower() == 'n'):
-    hive_query = "INSERT OVERWRITE TABLE %s select * from %s" % (hive_table, hive_staging_table)
+    hive_query = "INSERT %s TABLE %s select * from %s" % (hive_overwrite, hive_table, hive_staging_table)
   execute_remote_hive_query( hive_node  = hive_node, hive_port = hive_port, \
                              hive_db    = hive_db, mapred_job_priority = mapred_job_priority, \
                              quiet      = quiet, debug = debug, \
@@ -410,6 +440,13 @@ def csv_to_hive(**kwargs):
   else:
     partition_str = ""
   legoo.info("hive table [%s]:[%s].[%s] %s successfully built" % (hive_node, hive_db, hive_table, partition_str))
+  # check if temp file exists and remove
+  try:
+      temp_file
+  except NameError:
+      pass
+  else:
+      remove_file(file=temp_file) # remove temp file
 
 def csv_to_hive_table(**kwargs):
   """import csv to to existing hive table.
@@ -482,8 +519,16 @@ def csv_to_hive_table(**kwargs):
   legoo.info("running csv upload to hdfs ==>> [%s]" % ( hdfs_cmd))
   os.system( hdfs_cmd )  # os.system call is easier than subprocess for |
   # load data inpath '/tmp/fact_imp_pdp.csv' overwrite into table tmp_fact_imp_pdp;
+
+  # if not hive_overwrite, set to append mode
+  # Note that if the target table (or partition) already has a file whose name collides with any of the filenames contained in filepath, then the existing file will be replaced with the new file.
+  if (hive_overwrite.strip().lower() == 'y'):
+    hive_overwrite = ' OVERWRITE '
+  else:
+    hive_overwrite = ' '
+
   if (csv_delimiter.strip().lower() == 'tab'): csv_delimiter = "\'\\t\'"
-  hive_load_query = "load data inpath \'%s\' overwrite into table %s" % (hdfs_inpath, hive_table)
+  hive_load_query = "load data inpath \'%s\' %s into table %s" % (hdfs_inpath, hive_overwrite, hive_table)
   execute_remote_hive_query( hive_node  = hive_node, hive_port = hive_port, \
                              hive_db    = hive_db, mapred_job_priority = mapred_job_priority, \
                              quiet      = quiet, debug = debug, \
@@ -941,13 +986,13 @@ def qa_mysql_table(**kwargs):
   ops = {"=":  operator.eq,
          "==": operator.eq,
          "!=": operator.ne,
-         "<>": operator.ne, 
+         "<>": operator.ne,
          "<":  operator.lt,
-         "<=": operator.le, 
+         "<=": operator.le,
          ">":  operator.gt,
-         ">=": operator.ge 
+         ">=": operator.ge
          }
-  # may the key to the build-in operator ### 
+  # may the key to the build-in operator
   op_func = ops[comparison_operator]
 
   if op_func(int(number_rows), int(threshhold_value)):
@@ -1445,11 +1490,11 @@ def send_mail(**kwargs):
 
   receivers          = kwargs.pop("receivers", []) # ['pluo@trulia.com']
   if not receivers:
-      legoo.error("option receivers is missing") 
+      legoo.error("option receivers is missing")
       raise TypeError("option receivers is missing")
   elif type(receivers) <> list:
-      # convert comma seperate string to list. 
-      receivers = [r.strip() for r in receivers.split(',') ] 
+      # convert comma seperate string to list.
+      receivers = [r.strip() for r in receivers.split(',') ]
 
   subject            = kwargs.pop("subject", None)
   if not subject:
@@ -1470,7 +1515,7 @@ def send_mail(**kwargs):
     legoo.error("Unsupported configuration options %s" % list(kwargs))                   # log error
     raise TypeError("[ERROR] Unsupported configuration options %s" % list(kwargs))       # raise error and exit
 
-  # import smtp and related modules 
+  # import smtp and related modules
   import smtplib, os
   from email.MIMEMultipart import MIMEMultipart
   from email.MIMEBase import MIMEBase
@@ -1480,7 +1525,7 @@ def send_mail(**kwargs):
   from os import listdir
   from os.path import isfile, join
 
-  # build message 
+  # build message
   msg = MIMEMultipart()
   msg['From'] = sender
   msg['To'] = COMMASPACE.join(receivers)
@@ -1488,31 +1533,31 @@ def send_mail(**kwargs):
   msg['Subject'] = subject
 
   # build the plain text body
-  if body_text: 
+  if body_text:
       msg.attach(MIMEText(body_text, 'plain'))
   if body_text_file:
-      msg.attach(MIMEText(open(body_text_file,"rb").read(), 'plain')) 
+      msg.attach(MIMEText(open(body_text_file,"rb").read(), 'plain'))
 
   # build html body
-  if body_html: 
+  if body_html:
       msg.attach(MIMEText(body_html, 'html'))
   if body_html_file:
-      msg.attach(MIMEText(open(body_html_file,"rb").read(), 'html')) 
+      msg.attach(MIMEText(open(body_html_file,"rb").read(), 'html'))
 
   # warning: if body is EMPTY
   if not ( body_html or body_html_file or body_text or body_text_file):
-      legoo.warning("message body if empty, specify one of boby options [body_html, body_html_file, body_text, body_text_file]") 
+      legoo.warning("message body if empty, specify one of boby options [body_html, body_html_file, body_text, body_text_file]")
 
-  # convert comma seperate string to list 
+  # convert comma seperate string to list
   if attachment_files and type(attachment_files) <> list:
       attachment_files = attachment_files.split(',')
 
-  # append list of files from attachment_dir to attachment_files: 
-  if attachment_dir: 
+  # append list of files from attachment_dir to attachment_files:
+  if attachment_dir:
       attachment_files += [ f for f in listdir(attachment_dir) if isfile(join(attachment_dir,f)) ]
 
   # attach files
-  if attachment_files: 
+  if attachment_files:
       for f in attachment_files:
           part = MIMEBase('application', "octet-stream")
           part.set_payload( open(f.strip(),"rb").read() )
@@ -1520,7 +1565,7 @@ def send_mail(**kwargs):
           part.add_header('Content-Disposition', 'attachment; filename="%s"' % os.path.basename(f))
           msg.attach(part)
 
-  # send mail 
+  # send mail
   smtp = smtplib.SMTP(smtp_server, smtp_port)
   smtp.sendmail(sender, receivers, msg.as_string())
   smtp.close()
@@ -1537,7 +1582,8 @@ def main():
   # create_mysql_connection(mysql_host='bidbs', mysql_db='bi_staging', debug='Y')
   # (affected_rows, number_rows) = execute_mysql_query(mysql_host='bidbs', mysql_db='bi', mysql_query='select count(*) from dim_property', row_count='Y')
   # print affected_rows, number_rows
-  # (table_name, hive_ddl)=create_hive_ddl_from_csv(csv_file='/tmp/fact_imp_pdp.csv', table_name='tmp2', csv_delimiter='tab', create_table='Y')
+  # (table_name, hive_ddl)=create_hive_ddl_from_csv(csv_file='test/opportunity_no_header.csv2', table_name='tmp2', csv_delimiter='tab')
+  # print hive_ddl
   # csv_dump(csv_file='/tmp/opportunity.csv', csv_delimiter='tab', lines=10)
   # (table_name, hive_ddl)=create_hive_ddl_from_csv(csv_file='/tmp/fact_imp_pdp.csv', csv_delimiter='tab', create_table='Y')
   # execute_remote_hive_query(hive_query='desc top50_ip;')
