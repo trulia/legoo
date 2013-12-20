@@ -13,10 +13,11 @@ import unittest
 class TestSequenceFunctions(unittest.TestCase):
     def setUp(self):
         self.csv_file='census_population.csv'         # sample csv file
+        self.csv_file_no_header='census_population_no_header.csv' # sample csv file without header
 
         # trulia enviroment. update to your system settings accordingly
         # trulia HIVE env
-        self.hive_node='namenode2s'
+        self.hive_node='hive-cdh4-prod'
         self.hive_db='staging'
         self.hive_table='tmp_hive_census'
         self.hive_export_csv='tmp_census_population_hive.csv' 
@@ -138,6 +139,15 @@ class TestSequenceFunctions(unittest.TestCase):
         except:
             self.fail("csv_to_hive failed") 
 
+    def test205_csv_to_hive(self):
+        try:
+            legoo.csv_to_hive(hive_node = self.hive_node, hive_db = self.hive_db, \
+                              hive_table = self.hive_table, hive_create_table='N', hive_overwrite = 'Y', \
+                              csv_file = self.csv_file, csv_header = 'Y', \
+                              mapred_job_priority='VERY_HIGH', csv_delimiter=',')
+        except:
+            self.fail("csv_to_hive overwrite failed") 
+
 
     def test206_csv_to_hive_table(self):
         try:
@@ -145,7 +155,8 @@ class TestSequenceFunctions(unittest.TestCase):
                                     hive_table = self.hive_table, csv_file = self.csv_file, \
                                     mapred_job_priority='VERY_HIGH', csv_header = 'Y', csv_delimiter=',')
         except:
-            self.fail("csv_to_hive_table failed") 
+            self.fail("csv_to_hive_table failed")
+
 
     def test208_hive_to_csv(self):
         try:
@@ -167,6 +178,35 @@ class TestSequenceFunctions(unittest.TestCase):
             legoo.remove_file(file = self.hive_export_csv)
         except:
             self.fail("remove_file failed")
+
+    def test214_csv_to_hive(self):
+        try:
+            legoo.csv_to_hive(hive_node = self.hive_node, hive_db = self.hive_db, \
+                              hive_table = self.hive_table, hive_create_table='N', hive_overwrite = 'N', \
+                              csv_file = self.csv_file, csv_header = 'Y', \
+                              mapred_job_priority='VERY_HIGH', csv_delimiter=',')
+        except:
+            self.fail("csv_to_hive append failed") 
+
+
+    def test216_csv_to_hive(self):
+        try:
+            legoo.csv_to_hive(hive_node = self.hive_node, hive_db = self.hive_db, \
+                              hive_table = self.hive_table, hive_create_table='N', hive_overwrite = 'Y', \
+                              csv_file = self.csv_file_no_header, csv_header = 'N', \
+                              mapred_job_priority='VERY_HIGH', csv_delimiter=',')
+        except:
+            self.fail("csv_to_hive no header overwrite failed") 
+
+    def test218_csv_to_hive(self):
+        try:
+            legoo.csv_to_hive(hive_node = self.hive_node, hive_db = self.hive_db, \
+                              hive_table = self.hive_table, hive_create_table='N', hive_overwrite = 'N', \
+                              csv_file = self.csv_file_no_header, csv_header = 'N', \
+                              mapred_job_priority='VERY_HIGH', csv_delimiter=',')
+        except:
+            self.fail("csv_to_hive no header append failed") 
+
 
     def test300_mysql_to_hive(self):
         try:
