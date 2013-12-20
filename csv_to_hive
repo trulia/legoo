@@ -11,47 +11,45 @@ from optparse import OptionParser
 def main():
   parser = OptionParser()
   parser.add_option("--hive_node", dest="hive_node",
-                    help="OPTIONAL: target hive node. default: [namenode1]", default='namenode1')
+                    help="target hive node. default: [hive-cdh4-prod]", default='hive-cdh4-prod')
   parser.add_option("--hive_port", dest="hive_port",
-                    help="OPTIONAL: target hive port number. default: 10000", default='10000')
+                    help="target hive port number. default: 10000", default='10000')
   parser.add_option("--hive_db", dest="hive_db",
-                    help="OPTIONAL: target hive db. default: [staging]", default='staging')
+                    help="target hive db. default: [staging]", default='staging')
   parser.add_option("--hive_table", dest="hive_table",
-                    help="OPTIONAL: hive table name. default: created from csv file name")
+                    help="MANDATORY: hive table name")
   parser.add_option("--hive_partition", dest="hive_partition",
-                    help="partition name i.e. date_int=20130428")
+                    help="For partition table, partition name i.e. date_int=20130428")
   parser.add_option("--hive_create_table", dest="hive_create_table",
-                    help="OPTIONAL: CREATE_TABLE flag for hive table DDL. default: [Y]", default='N')
+                    help="CREATE_TABLE flag for hive table DDL. default: [N]", default='N')
   parser.add_option("--hive_overwrite", dest="hive_overwrite",
-                    help="OPTIONAL: OVERWRITE flag for hive table loading. default: [Y]", default='Y')
+                    help="OVERWRITE flag for hive table loading. default to [N] as append mode", default='N')
   parser.add_option("--mapred_job_priority", dest="mapred_job_priority",
-                    help="OPTIONAL: map reduce job priority [VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW]",  default='NORMAL')
+                    help="map reduce job priority [VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW]",  default='NORMAL')
   parser.add_option("--csv_header", dest="csv_header",
-                    help="OPTIONAL: csv_header flag csv file default: [Y]", default='Y')
+                    help="csv header flag. default: [Y]", default='Y')
 
   parser.add_option("--remove_carriage_return", dest="remove_carriage_return",
-                    help="OPTIONAL: remove carriage return from mysql source table. default: [N]", default='N')
+                    help="remove carriage return from mysql source table. default: [N]", default='N')
+  parser.add_option("--csv_file", dest="csv_file", help="csv file")
   parser.add_option("--csv_delimiter", dest="csv_delimiter", help="delimiter for csv file, default: [tab]", default='tab')
   parser.add_option("--debug", dest="debug", help="debug flag [Y|N], default: [N]", default='N')
   (options, args) = parser.parse_args()
 
-  for csv_file in args:
-      legoo.csv_to_hive(  hive_node              = options.hive_node, \
-                          hive_port              = options.hive_port, \
-                          hive_db                = options.hive_db, \
-                          hive_create_table      = options.hive_create_table, \
-                          hive_table             = options.hive_table, \
-                          hive_partition         = options.hive_partition, \
-                          hive_overwrite         = options.hive_overwrite, \
-                          mapred_job_priority    = options.mapred_job_priority, \
-                          csv_file               = csv_file, \
-                          csv_header             = options.csv_header, \
-                          csv_delimiter          = options.csv_delimiter, \
-                          remove_carriage_return = options.remove_carriage_return, \
-                          debug                  = options.debug
-                    )
-  # pass
-
+  legoo.csv_to_hive(  hive_node              = options.hive_node, \
+                      hive_port              = options.hive_port, \
+                      hive_db                = options.hive_db, \
+                      hive_create_table      = options.hive_create_table, \
+                      hive_table             = options.hive_table, \
+                      hive_overwrite         = options.hive_overwrite, \
+                      hive_partition         = options.hive_partition, \
+                      mapred_job_priority    = options.mapred_job_priority, \
+                      csv_file               = options.csv_file, \
+                      csv_header             = options.csv_header, \
+                      csv_delimiter          = options.csv_delimiter, \
+                      remove_carriage_return = options.remove_carriage_return, \
+                      debug                  = options.debug
+                      )
 if __name__ == '__main__':
   main()
 
