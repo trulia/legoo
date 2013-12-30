@@ -64,10 +64,10 @@ To use `legoo` modules, you specify the module you want to use and the options t
     $ csv_dump -h
     Usage: csv_dump [options]
     Options:
-      -h, --help                                          show this help message and exit
-      -d CSV_DELIMITER, --csv_delimiter=CSV_DELIMITE      csv file delimiter, default: [tab]
-      -l LINES, --lines=LINES                             number of lines to dump out, default: [2]
-      -n LINE_NUMBER, --line_number=LINE_NUMBER           starting line number to dump out, default: [2]
+      -h, --help                  show this help message and exit
+      -d, --csv_delimiter         csv file delimiter, default: [tab]
+      -l, --lines                 number of lines to dump out, default: [2]
+      -n, --line_number           starting line number to dump out, default: [2]
 
 ##### example: pretty print for line 505 in tab delimited file: /data/tmp/dim_listing_delta.csv
 
@@ -102,21 +102,21 @@ To use `legoo` modules, you specify the module you want to use and the options t
     Usage: csv_to_mysql [options] sample.csv
 
     Options:
-      -h, --help                                    show this help message and exit
-      --mysql_ini=MYSQL_INI                         mysql initial file for user, password and default db,default: [mysql.ini]
-      --mysql_host=MYSQL_HOST                       target mysql host. default: [bidbs]
-      --mysql_user=MYSQL_USER                       OPTIONAL: mysql user, if not specified, get user from mysql_ini
-      --mysql_password=MYSQL_PASSWORD               OPTIONAL: mysql password, if not specified, get password from mysql_ini
-      --mysql_db=MYSQL_DB                           target mysql database. default: [bi_staging]
-      --mysql_table=MYSQL_TABLE                     target mysql table name
-      --mysql_create_table=MYSQL_CREATE_TABLE       mysql create table flag [Y|N]. default: [N]
-      --mysql_truncate_table=MYSQL_TRUNCATE_TABLE   mysql truncate table flag [Y|N]. default: [N]
-      --csv_delimiter=CSV_DELIMITER                 delimiter for csv file. default: [tab]
-      --csv_header=CSV_HEADER                       header flag for csv file. default: [Y]
-      --csv_optionally_enclosed_by                  csv_optionally enclosed_by for csv file
-      --max_rows=MAX_ROWS                           number of rows in csv file scanned to find column length
-      -q --quiet --silent                           OPTIONAL: suppress messages to stdout. default: [N]
-      -d --debug                                    OPTIONAL: debug flag [Y|N], default: [N]
+      -h, --help                         show this help message and exit
+      --mysql_ini                        mysql initial file for user, password and default db,default: [mysql.ini]
+      --mysql_host                       target mysql host. default: [bidbs]
+      --mysql_user                       mysql user, if not specified, get user from mysql_ini
+      --mysql_password                   mysql password, if not specified, get password from mysql_ini
+      --mysql_db                         target mysql database. default: [bi_staging]
+      --mysql_table                      target mysql table name
+      --mysql_create_table               mysql create table flag [Y|N]. default: [N]
+      --mysql_truncate_table             mysql truncate table flag [Y|N]. default: [N]
+      --csv_delimiter                    delimiter for csv file. default: [tab]
+      --csv_header                       header flag for csv file. default: [Y]
+      --csv_optionally_enclosed_by       csv_optionally enclosed_by for csv file
+      --max_rows                         number of rows in csv file scanned to find column length
+      -q --quiet --silent                OPTIONAL: suppress messages to stdout. default: [N]
+      -d --debug                         OPTIONAL: debug flag [Y|N], default: [N]
 
 ##### example: generate `MySQL` `DDL` from `CSV` header, create table based on `DDL`, then load data. note: omitted options take on default value. there are ~250 fields in CSV. Imagine creating `DDL` yourself.
 
@@ -162,19 +162,19 @@ To use `legoo` modules, you specify the module you want to use and the options t
     Usage: csv_to_hive [options]
 
     Options:
-      -h, --help                                 show this help message and exit
-      --hive_node=HIVE_NODE                      OPTIONAL: target hive node. default: [namenode1]
-      --hive_port=HIVE_PORT                      OPTIONAL: target hive port number. default: 10000
-      --hive_db=HIVE_DB                          OPTIONAL: target hive db. default: [staging]
-      --hive_table=HIVE_TABLE                    OPTIONAL: hive table name. default: created from csv file name
-      --hive_partition=HIVE_PARTITION            partition name i.e. date_int=20130428
-      --hive_create_table=HIVE_CREATE_TABLE      OPTIONAL: CREATE_TABLE flag for hive table DDL. default: [Y]
-      --hive_overwrite=HIVE_OVERWRITE            OPTIONAL: OVERWRITE flag for hive table loading.default: [Y]
-      --csv_header=CSV_HEADER                    OPTIONAL: csv_header flag csv file default: [Y]
-      --remove_carriage_return                   OPTIONAL: remove carriage return from mysql source table. default: [N]
-      --csv_delimiter=CSV_DELIMITER              delimiter for csv file, default: [tab]
-      -q --quiet --silent                        OPTIONAL: suppress messages to stdout. default: [N]
-      -d --debug                                 OPTIONAL: debug flag [Y|N], default: [N]
+      -h, --help                   show this help message and exit
+      --hive_node                  target hive node. default: [namenode1]
+      --hive_port                  target hive port number. default: 10000
+      --hive_db                    target hive db. default: [staging]
+      --hive_table                 hive table name. default: created from csv file name
+      --hive_partition             partition name i.e. date_int=20130428
+      --hive_create_table          CREATE_TABLE flag for hive table DDL. default: [Y]
+      --hive_overwrite             OVERWRITE flag for hive table loading.default: [Y]
+      --csv_header                 csv_header flag csv file default: [Y]
+      --remove_carriage_return     remove carriage return from mysql source table. default: [N]
+      --csv_delimiter              delimiter for csv file, default: [tab]
+      -q --quiet --silent          suppress messages to stdout. default: [N]
+      -d --debug                   debug flag [Y|N], default: [N]
 
 
 ##### example: generate `Hive` `DDL` from `CSV` header, create table based on `DDL`, then load data to table in `staging` db on `Hive` cluster . note: omitted options take on default value. For `CSV` haveing ~250 fields, imagine creating `MySQL DDL` yourself.
@@ -226,26 +226,26 @@ To use `legoo` modules, you specify the module you want to use and the options t
     Usage: mysql_to_hive [options]
 
     Options:
-      -h, --help                                        show this help message and exit
-      --mysql_ini=MYSQL_INI                             mysql initial file for user, password and default db, default: [mysql.ini]
-      --mysql_host=MYSQL_HOST                           mysql host for source data, default: [bidbs]
-      --mysql_db=MYSQL_DB         	       	      	    mysql database for source data, default: [bi]
-      --mysql_user=MYSQL_USER                           OPTIONAL: mysql user, if not specified, get user from mysql_ini
-      --mysql_password=MYSQL_PASSWORD                   OPTIONAL: mysql password, if not specified, get password from mysql_ini
-      --mysql_quick=MYSQL_QUICK                         OPTIONAL: --quick option for mysql client, default:[N]
-      --mysql_table=MYSQL_TABLE                         mysql table to be exported
-      --mysql_query=MYSQL_QUERY                         query results to be exported
-      --hive_node=HIVE_NODE                             OPTIONAL: target hive node. default: [namenode1]
-      --hive_port=HIVE_PORT                             OPTIONAL: target hive port. default: 10000
-      --hive_db=HIVE_DB                                 OPTIONAL: target hive db. default: [staging]
-      --hive_ddl=HIVE_DDL                               OPTIONAL: hive DDL for target hive table. default created from source mysql table
-      --hive_create_table=HIVE_CREATE_TABLE             OPTIONAL: CREATE_TABLE flag for hive table DDL. default: [N]
-      --hive_overwrite=HIVE_OVERWRITE                   OPTIONAL: OVERWRITE flag for hive table loading. default: [Y]
-      --hive_table=HIVE_TABLE                           OPTIONAL: hive table name. default: created from csv file name
-      --hive_partition=HIVE_PARTITION                   partition name i.e. date_int=20130428
-      --remove_carriage_return=REMOVE_CARRIAGE_RETURN   OPTIONAL: remove carriage return from mysql source table. default: [N]
-      -q --quiet --silent                               OPTIONAL: suppress messages to stdout. default: [N]
-      -d --debug                                        OPTIONAL: debug flag [Y|N], default: [N]
+      -h, --help                 show this help message and exit
+      --mysql_ini                mysql initial file for user, password and default db, default: [mysql.ini]
+      --mysql_host               mysql host for source data, default: [bidbs]
+      --mysql_db         	     mysql database for source data, default: [bi]
+      --mysql_user               mysql user, if not specified, get user from mysql_ini
+      --mysql_password           mysql password, if not specified, get password from mysql_ini
+      --mysql_quick              quick option for mysql client, default:[N]
+      --mysql_table              mysql table to be exported
+      --mysql_query              query results to be exported
+      --hive_node                target hive node. default: [namenode1]
+      --hive_port                target hive port. default: 10000
+      --hive_db                  target hive db. default: [staging]
+      --hive_ddl                 hive DDL for target hive table. default created from source mysql table
+      --hive_create_table        CREATE_TABLE flag for hive table DDL. default: [N]
+      --hive_overwrite           OVERWRITE flag for hive table loading. default: [Y]
+      --hive_table               hive table name. default: created from csv file name
+      --hive_partition           partition name i.e. date_int=20130428
+      --remove_carriage_return   remove carriage return from mysql source table. default: [N]
+      -q --quiet --silent        suppress messages to stdout. default: [N]
+      -d --debug                 debug flag [Y|N], default: [N]
 
 
 ##### example: transfer query results from `MySQL` to `Hive` table `email_archive.fe_emailrecord_archive` `partition (date_key=20130710)` on `Hive` cluster. remove carriage return from the source data before transfer.
@@ -300,24 +300,23 @@ To use `legoo` modules, you specify the module you want to use and the options t
     Usage: hive_to_mysql [options]
 
     Options:
-      -h, --help                            show this help message and exit
-      --hive_node=HIVE_NODE                 source hive node. default: [namenode1]
-      --hive_db=HIVE_DB                     source hive database. default: [staging]
-      --hive_table=HIVE_TABLE               source hive table name
-      --hive_query=HIVE_QUERY               Free form query results to be exported
-      --debug=DEBUG                         set the debug flag [Y|N], default: [N]
-      --mysql_ini=MYSQL_INI                 mysql initial file for user, password and default db, default: [mysql.ini]
-      --mysql_host=MYSQL_HOST               target mysql host, default: [bidbs]
-      --mysql_user=MYSQL_USER               OPTIONAL: mysql user, if not specified, get user from mysql_ini
-      --mysql_password=MYSQL_PASSWORD       OPTIONAL: mysql password, if not specified, get password from mysql_ini
-      --mysql_db=MYSQL_DB                   target mysql database, default: [bi_staging]
-      --mysql_table=MYSQL_TABLE             target mysql table name
-      --mysql_create_table                  mysql create table flag [Y|N], default: [N]
-      --mysql_truncate_table                mysql truncate table flag [Y|N], default: [N]
-      --csv_optionally_enclosed_by          optionally enclosed_by for csv file
-      --max_rows=MAX_ROWS                   number of rows scanned to create mysql ddl
-      -q --quiet --silent                   OPTIONAL: suppress messages to stdout. default: [N]
-      -d --debug                            OPTIONAL: debug flag [Y|N], default: [N]
+      -h, --help                        show this help message and exit
+      --hive_node                       source hive node. default: [namenode1]
+      --hive_db                         source hive database. default: [staging]
+      --hive_table                      source hive table name
+      --hive_query                      free form query results to be exported
+      --mysql_ini                       mysql initial file for user, password and default db, default: [mysql.ini]
+      --mysql_host                      target mysql host, default: [bidbs]
+      --mysql_user                      mysql user, if not specified, get user from mysql_ini
+      --mysql_password                  mysql password, if not specified, get password from mysql_ini
+      --mysql_db                        target mysql database, default: [bi_staging]
+      --mysql_table                     target mysql table name
+      --mysql_create_table              mysql create table flag [Y|N], default: [N]
+      --mysql_truncate_table            mysql truncate table flag [Y|N], default: [N]
+      --csv_optionally_enclosed_by      enclosed_by for csv file
+      --max_rows                        number of rows scanned to create mysql ddl
+      -q --quiet --silent               suppress messages to stdout. default: [N]
+      -d --debug                        debug flag [Y|N], default: [N]
 
 #####  example: truncate mysql table first then export data from hive table to mysql table
 
@@ -350,19 +349,19 @@ To use `legoo` modules, you specify the module you want to use and the options t
     Usage: mysql_to_csv [options]
 
     Options:
-      -h, --help                           show this help message and exit
-      --mysql_ini=MYSQL_INI                mysql initial file for user, password and default db, default: [mysql.ini]
-      --mysql_host=MYSQL_HOST              mysql host for source data, default: [bidbs]
-      --mysql_db=MYSQL_DB                  mysql database for source data, default: [bi]
-      --mysql_user=MYSQL_USER              OPTIONAL: mysql user, if not specified, get user from mysql_ini
-      --mysql_password=MYSQL_PASSWORD      OPTIONAL: mysql password, if not specified, get password from mysql_ini
-      --mysql_quick=MYSQL_QUICK            mysql quick for large volume data
-      --mysql_table=MYSQL_TABLE            mysql table to be exported
-      --mysql_query=MYSQL_QUERY            query results to be exported
-      --csv_dir=CSV_DIR                    dir for csv file to be exported, default: [/data/tmp]
-      --csv_file=CSV_FILE                  the csv file to be exported, default: [table_name.csv]
-      -q --quiet --silent                  OPTIONAL: suppress messages to stdout. default: [N]
-      -d --debug                           OPTIONAL: debug flag [Y|N], default: [N]
+      -h, --help               show this help message and exit
+      --mysql_ini              mysql initial file for user, password and default db, default: [mysql.ini]
+      --mysql_host             mysql host for source data, default: [bidbs]
+      --mysql_db               mysql database for source data, default: [bi]
+      --mysql_user             mysql user, if not specified, get user from mysql_ini
+      --mysql_password         mysql password, if not specified, get password from mysql_ini
+      --mysql_quick            mysql quick for large volume data
+      --mysql_table            mysql table to be exported
+      --mysql_query            query results to be exported
+      --csv_dir                dir for csv file to be exported, default: [/data/tmp]
+      --csv_file               the csv file to be exported, default: [table_name.csv]
+      -q --quiet --silent      suppress messages to stdout. default: [N]
+      -d --debug               debug flag [Y|N], default: [N]
 
 
 ##### example: export `MySQL query result` to `TSV`
@@ -383,15 +382,15 @@ To use `legoo` modules, you specify the module you want to use and the options t
     Usage: hive_to_csv [options]
 
     Options:
-      -h, --help                      show this help message and exit
-      --hive_node=HIVE_NODE           source hive node. default: [namenode1]
-      --hive_db=HIVE_DB               source hive database. default: [staging]
-      --hive_table=HIVE_TABLE         source hive table name
-      --hive_query=HIVE_QUERY         Free form query results to be exported
-      --csv_dir=CSV_DIR               dir for tsv
-      --csv_file=CSV_FILE             export hive [table | query results] to tsv
-      -q --quiet --silent             OPTIONAL: suppress messages to stdout. default: [N]
-      -d --debug                      OPTIONAL: debug flag [Y|N], default: [N]
+      -h, --help             show this help message and exit
+      --hive_node            source hive node. default: [namenode1]
+      --hive_db              source hive database. default: [staging]
+      --hive_table           source hive table name
+      --hive_query           free form query results to be exported
+      --csv_dir              dir for tsv
+      --csv_file             export hive [table | query results] to tsv
+      -q --quiet --silent    suppress messages to stdout. default: [N]
+      -d --debug             debug flag [Y|N], default: [N]
 
 
 ##### example: export `Hive query result` to `TSV`: `/data/tmp/dim_time.csv`
@@ -411,15 +410,15 @@ To use `legoo` modules, you specify the module you want to use and the options t
     Usage: execute_mysql_query [options]
 
     Options:
-      -h, --help                           show this help message and exit
-      --mysql_host                         mysql host. default: [namehost1]
-      --mysql_db                           mysql db. default: [staging]
-      --mysql_user                         mysql user, if not specified, get user from mysql_ini
-      --mysql_password                     mysql password, if not specified, get password from mysql_ini
-      --mysql_query=MYSQL_QUERY            mysql query
-      --row_count=ROW_COUNT                OPTIONAL: row_count default: [N]
-      -q --quiet --silent                  OPTIONAL: suppress messages to stdout. default: [N]
-      -d --debug                           OPTIONAL: debug flag [Y|N], default: [N]
+      -h, --help                show this help message and exit
+      --mysql_host              mysql host. default: [namehost1]
+      --mysql_db                mysql db. default: [staging]
+      --mysql_user              mysql user, if not specified, get user from mysql_ini
+      --mysql_password          mysql password, if not specified, get password from mysql_ini
+      --mysql_query             mysql query
+      --row_count               row_count default: [N]
+      -q --quiet --silent       suppress messages to stdout. default: [N]
+      -d --debug                debug flag [Y|N], default: [N]
 
 ##### example: describe table [tmp_visit] on [bidbs].[bi_staging]
      
@@ -459,9 +458,9 @@ To use `legoo` modules, you specify the module you want to use and the options t
       --hive_port                          hive port number. default: 10000
       --hive_db                            hive db. default: [staging]
       --hive_query                         hive query
-      --mapred_job_priority                OPTIONAL: map reduce job priority [VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW]. default: [NORMAL]
-      -q --quiet --silent                  OPTIONAL: suppress messages to stdout. default: [N]
-      -d --debug                           OPTIONAL: debug flag [Y|N], default: [N]
+      --mapred_job_priority                map reduce job priority [VERY_HIGH, HIGH, NORMAL, LOW, VERY_LOW]. default: [NORMAL]
+      -q --quiet --silent                  suppress messages to stdout. default: [N]
+      -d --debug                           debug flag [Y|N], default: [N]
       
 ##### example: describe hive table [top50_ip] on [namenode2s]:[staging]: 
      
@@ -510,13 +509,13 @@ To use `legoo` modules, you specify the module you want to use and the options t
 
     Options:
       -h, --help            show this help message and exit
-      -s --sleep_interval   OPTIONAL: sleep for approximately s seconds between iterations. default: [60]
-      -n --num_retry        OPTIONAL: number of retry
-      -m --mtime_after      OPTIONAL: file modified after datetime [yyyy-mm-dd hh:mm]. i.e. [2013-10-08 14:30]
-      -a --stop_at          OPTIONAL: stop checking file at datetime [yyyy-mm-dd hh:mm]. i.e. [2013-10-08 15:30]
+      -s --sleep_interval   sleep for approximately s seconds between iterations. default: [60]
+      -n --num_retry        number of retry
+      -m --mtime_after      file modified after datetime [yyyy-mm-dd hh:mm]. i.e. [2013-10-08 14:30]
+      -a --stop_at          stop checking file at datetime [yyyy-mm-dd hh:mm]. i.e. [2013-10-08 15:30]
       -f --file             file name
-      -q --quiet --silent   OPTIONAL: suppress messages to stdout. default: [N]
-      -d --debug            OPTIONAL: debug flag [Y|N], default: [N]
+      -q --quiet --silent   suppress messages to stdout. default: [N]
+      -d --debug            debug flag [Y|N], default: [N]
 
 ## `wait_for_table`
 `wait_for_table` check if table exists and has updated after `update_after`. otherwise, retry based on `sleep_interval`, `num_retry` and/or `stop_at`
@@ -546,11 +545,11 @@ To use `legoo` modules, you specify the module you want to use and the options t
       --update_after        mysql table modified after datetime [yyyy-mm-dd hh:mm] i.e. [2013-10-09 14:25]
       --etl_table           mysql table name. WARNING: TRULIA proprietary
       --etl_job             job name. WARNING: TRULIA proprietary
-      -s --sleep_interval   OPTIONAL: sleep for approximately s seconds between iterations. default: [60]
-      -n --num_retry        OPTIONAL: number of retry
-      -a --stop_at          OPTIONAL: stop checking file at datetime [yyyy-mm-dd hh:mm]. i.e. [2013-10-08 15:30]
-      -q --quiet --silent   OPTIONAL: suppress messages to stdout. default: [N]
-      -d --debug            OPTIONAL: debug flag [Y|N], default: [N]
+      -s --sleep_interval   sleep for approximately s seconds between iterations. default: [60]
+      -n --num_retry        number of retry
+      -a --stop_at          stop checking file at datetime [yyyy-mm-dd hh:mm]. i.e. [2013-10-08 15:30]
+      -q --quiet --silent   suppress messages to stdout. default: [N]
+      -d --debug            debug flag [Y|N], default: [N]
 
 ## `qa_mysql_table`
 Instead of expensive and unwieldy `profiling`, `qa_mysql_table` takes lightweight approach to check `MySQL` table after `etl`.
@@ -596,8 +595,8 @@ Instead of expensive and unwieldy `profiling`, `qa_mysql_table` takes lightweigh
       --mysql_query                 mysql query for QA
       --comparison_operator         comparison_operator [=, ==, >, >=, <, <=, <>, !=] to compare [query result] to [threshhold_value]
       --threshhold_value            threshhold_value
-      -q --quiet --silent           OPTIONAL: suppress messages to stdout. default: [N]
-      -d -debug                     OPTIONAL: debug flag [Y|N], default: [N]
+      -q --quiet --silent           suppress messages to stdout. default: [N]
+      -d -debug                     debug flag [Y|N], default: [N]
 
 ##### example: check if partition `20131027` populated with 2+ millon rows in 3 billion rows table `fact_property_view_anonymous`.  
     
@@ -645,7 +644,7 @@ send `email` in `plain` or `html` format, and attach `files` from list or `dir`
 * `Apache HBase` client
 * more ...
 
-## Contributors
+## Contributor
 * Patrick Luo ([partick.luo2006@gmail.com]())
 
 ## License
