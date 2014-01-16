@@ -4,8 +4,8 @@
 # PATH=$PATH:/home/dataproc/bi/lib/python # add python lib to path
 # mysql_to_hive --mysql_host='bidbs' --mysql_db='bi_staging' --mysql_table='userstatsreport' --hive_create_table='Y'
 # mysql_to_hive --mysql_db='bi' --mysql_table='lkp_state' --hive_create_table='Y' 
-# sqoop-import  --connect jdbc:mysql://bidbs/bi_staging -username root -password 6c02avsg  --table userstatsreport  --hive-table userstatsreport --create-hive-table --hive-import --hive-home /usr/lib/hive   
-# sqoop-import  --connect jdbc:mysql://maildb-slave/Email -username root -password 6c02avsg  --table FE_EmailRecord  --hive-table FE_EmailRecord  --where "time_stamp < '2013-02-02'"  --create-hive-table --hive-import --hive-home /usr/lib/hive   
+# sqoop-import  --connect jdbc:mysql://bidbs/bi_staging -username root -password ***  --table userstatsreport  --hive-table userstatsreport --create-hive-table --hive-import --hive-home /usr/lib/hive   
+# sqoop-import  --connect jdbc:mysql://maildb-slave/Email -username root -password ***  --table FE_EmailRecord  --hive-table FE_EmailRecord  --where "time_stamp < '2013-02-02'"  --create-hive-table --hive-import --hive-home /usr/lib/hive   
 # time mysql_to_hive --mysql_host='maildb-slave' --mysql_db='Email' --mysql_table='FE_EmailRecord' --mysql_query="select * from Email.FE_EmailRecord where time_stamp < '2013-02-02'" --hive_create_table='Y'  --remove_carriage_return='Y'
 # mysql_to_hive --mysql_host='bidbs' --mysql_db='bi' --mysql_table='dim_time' --hive_create_table='Y'
 
